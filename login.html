@@ -2,29 +2,23 @@
 <html lang="no">
 <head>
   <meta charset="UTF-8">
-  <title>Logg inn – Kanonball</title>
+  <title>Logg inn</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <div class="header">
-    <h1>Administrator – Logg inn</h1>
-  </div>
-
   <div class="config">
-    <h2>Logg inn</h2>
+    <h2>Administrator – Logg inn</h2>
 
     <label for="password">Passord</label>
     <input type="password" id="password">
 
     <button id="loginBtn">Logg inn</button>
-
     <p id="msg" style="color:red;"></p>
   </div>
 
   <script>
-    // Standard passord: "kanonball2026"
-    const DEFAULT_HASH = "b8f1c1f6d2c1a4b1";
+    const DEFAULT_HASH = "b8f1c1f6d2c1a4b1"; // hash av "kanonball2026"
 
     function hash(str) {
       let h = 0;
