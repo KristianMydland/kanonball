@@ -18,9 +18,9 @@
   </div>
 
   <script>
-    // RIKTIG HASH for "kanonball2026"
-    const DEFAULT_HASH = "-4f1c2a5e";
-
+    // RIKTIG HASH for "kanonball2026" const DEFAULT_HASH = "-4f1c2a5e";
+    // RIKTIG HASH for "KB2026" 
+    const DEFAULT_HASH = "-7c4b0527";
     function hash(str) {
       let h = 0;
       for (let i = 0; i < str.length; i++) {
@@ -29,7 +29,6 @@
       }
       return h.toString(16);
     }
-
     document.getElementById("loginBtn").addEventListener("click", () => {
       const pw = document.getElementById("password").value;
 
