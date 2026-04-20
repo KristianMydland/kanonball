@@ -13,6 +13,17 @@ let lastSchedule = null;
 // ----------------------------
 // LOCALSTORAGE
 // ----------------------------
+// Logg inn og logg ut
+function isAdmin() {
+  return localStorage.getItem("is_admin") === "true";
+}
+
+function requireAdmin() {
+  if (!isAdmin()) {
+    alert("Du må være logget inn for å gjøre dette.");
+    window.location.href = "login.html";
+  }
+}
 function saveResults() {
   localStorage.setItem("kanonball_results", JSON.stringify(matchResults));
 }
@@ -307,4 +318,9 @@ function importResultsFromFile() {
     alert("Resultater importert!");
     location.reload();
   });
+}
+
+function logout() {
+  localStorage.removeItem("is_admin");
+  window.location.href = "login.html";
 }

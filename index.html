@@ -7,9 +7,15 @@
 </head>
 
 <body>
+  <script src="script.js"></script>
+  <script>
+    requireAdmin();
+  </script>
+
   <div class="header">
     <img src="lauvasen_logo.png" style="height:70px;">
     <h1>Kampgenerator – Lauvåsen IF Kanonballturnering 2026</h1>
+    <button onclick="logout()" class="secondary">Logg ut</button>
     <button id="darkToggle" class="dark-toggle secondary">Dark mode</button>
   </div>
 
@@ -41,29 +47,37 @@
     <div id="teamNames"></div>
 
     <button id="generateBtn">Generer kampoppsett</button>
+
     <button id="saveScheduleBtn" class="secondary">Lagre kampoppsett til fil (JSON)</button>
     <button id="saveHTMLBtn" class="secondary">Lagre kampoppsett som HTML</button>
-    <button onclick="importScheduleFromFile()" class="secondary">Importer kampoppsett fra fil (JSON)</button>
-    <button onclick="importResultsFromFile()" class="secondary">Importer resultater fra fil (JSON)</button>
+
+    <button onclick="importScheduleFromFile()" class="secondary">
+      Importer kampoppsett fra fil (JSON)
+    </button>
+
+    <button onclick="importResultsFromFile()" class="secondary">
+      Importer resultater fra fil (JSON)
+    </button>
+
     <br><br>
     <button onclick="window.open('kampoppsett.html','_blank')" class="secondary">
       Åpne lagret kampoppsett
     </button>
+
     <button onclick="window.open('resultater.html','_blank')" class="secondary">
       Åpne resultater
     </button>
   </div>
-
+//test her
   <div class="results">
     <h2>Kampoppsett</h2>
     <div id="scheduleContainer"></div>
   </div>
 
-  <script src="script.js"></script>
   <script>
     initDarkMode();
     loadResults();
-
+    requireAdmin();
     const numTeamsSelect = document.getElementById("numTeams");
     const teamNamesDiv = document.getElementById("teamNames");
 

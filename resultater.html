@@ -7,21 +7,36 @@
 </head>
 
 <body>
+  <script src="script.js"></script>
+  <script>
+    requireAdmin();
+  </script>
+
   <div class="header">
     <img src="lauvasen_logo.png" style="height:70px;">
     <h1>Resultater – Lauvåsen IF Kanonballturnering 2026</h1>
+    <button onclick="logout()" class="secondary">Logg ut</button>
     <button id="darkToggle" class="dark-toggle secondary">Dark mode</button>
   </div>
 
   <div class="results">
     <h2>Kampresultater</h2>
     <div id="resultsContainer"></div>
-    <button id="saveResultsBtn" class="secondary">Lagre resultater til fil (JSON)</button>
-    <button onclick="importResultsFromFile()" class="secondary">Importer resultater fra fil (JSON)</button>
-    <button onclick="importScheduleFromFile()" class="secondary">Importer kampoppsett fra fil (JSON)</button>
-    <button id="resetAllBtn" class="secondary" style="background:#ffdddd; color:#900;">Nullstill ALLE resultater</button>
 
-    </div>
+    <button id="saveResultsBtn" class="secondary">Lagre resultater til fil (JSON)</button>
+
+    <button onclick="importResultsFromFile()" class="secondary">
+      Importer resultater fra fil (JSON)
+    </button>
+
+    <button onclick="importScheduleFromFile()" class="secondary">
+      Importer kampoppsett fra fil (JSON)
+    </button>
+
+    <button id="resetAllBtn" class="secondary" style="background:#ffdddd; color:#900;">
+      Nullstill ALLE resultater
+    </button>
+  </div>
 
   <div class="results">
     <h2>Poengtabell</h2>
@@ -36,7 +51,6 @@
     <div id="standingsContainer"></div>
   </div>
 
-  <script src="script.js"></script>
   <script>
     initDarkMode();
     loadResults();
@@ -67,7 +81,7 @@
 
       schedule.forEach(slot => {
         slot.matches.forEach(m => {
-        const id = `${slot.round}|${m.teamA}|${m.teamB}`;
+          const id = `${slot.round}|${m.teamA}|${m.teamB}`;
           const r = matchResults[id] || { scoreA: "", scoreB: "" };
 
           html += `
@@ -96,7 +110,6 @@
       html += "</tbody></table>";
       document.getElementById("resultsContainer").innerHTML = html;
 
-      // Live oppdatering
       document.addEventListener("input", e => {
         if (!e.target.id.startsWith("RES_")) return;
 
@@ -113,7 +126,6 @@
         renderStandings(teams);
       });
 
-      // Sortering
       document.getElementById("sortStandings").addEventListener("change", () => {
         renderStandings(teams);
       });
@@ -124,20 +136,17 @@
     document.getElementById("saveResultsBtn").addEventListener("click", () => {
       downloadJSON("resultater.json", matchResults);
     });
- // Slett alle resultater og nullstill poengtabellen
-  document.getElementById("resetAllBtn").addEventListener("click", () => {
-    if (!confirm("Er du sikker på at du vil slette ALLE resultater? Dette kan ikke angres.")) {
-      return;
-    }
 
-    // Nullstill resultater
-    matchResults = {};
-    saveResults();
+    document.getElementById("resetAllBtn").addEventListener("click", () => {
+      if (!confirm("Er du sikker på at du vil slette ALLE resultater? Dette kan ikke angres.")) {
+        return;
+      }
 
-    // Oppdater visning
-    alert("Alle resultater er slettet.");
-    location.reload();
-  });
+      matchResults = {};
+      saveResults();
+      alert("Alle resultater er slettet.");
+      location.reload();
+    });
   </script>
 </body>
 </html>
