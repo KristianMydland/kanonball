@@ -18,7 +18,8 @@
   </div>
 
   <script>
-    const DEFAULT_HASH = "-4f1c2a5e"; // hash av "kanonball2026"
+    // RIKTIG HASH for "kanonball2026"
+    const DEFAULT_HASH = "-4f1c2a5e";
 
     function hash(str) {
       let h = 0;
@@ -31,7 +32,10 @@
 
     document.getElementById("loginBtn").addEventListener("click", () => {
       const pw = document.getElementById("password").value;
+
+      // BRUK KUN DEFAULT_HASH — LocalStorage kan ikke ødelegge passordet lenger
       const stored = DEFAULT_HASH;
+
       if (hash(pw) === stored) {
         localStorage.setItem("is_admin", "true");
         window.location.href = "index.html";
