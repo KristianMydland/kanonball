@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <title>Kampoppsett – Lauvåsen IF</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="header">
+    <img src="lauvasen_logo.png" style="height:70px;">
+    <h1>Kampoppsett – Lagret oppsett</h1>
+    <button id="darkToggle" class="dark-toggle secondary">Dark mode</button>
+  </div>
+
+  <div class="results">
+    <div id="scheduleContainer"></div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    initDarkMode();
+
+    const saved = loadSchedule();
+    if (!saved) {
+      document.getElementById("scheduleContainer").innerHTML =
+        "<p>Ingen lagret kampoppsett funnet.</p>";
+    } else {
+      const { schedule, teams } = saved;
+
+      let html = "<table><thead><tr>" +
+        "<th>Runde</th><th>Start</th><th>Slutt</th><th>Bane</th><th>Lag A</th><th>Lag B</th>" +
+        "</tr></thead><tbody>";
+
+      schedule.forEach(slot => {
+        slot.matches.forEach(m => {
+          const colorA = teamColors[teams.indexOf(m.teamA) % teamColors.length];
+          const colorB = teamColors[teams.indexOf(m.teamB) % teamColors.length];
+
+          html += `
+            <tr>
+              <td>${slot.round}</td>
+              <td>${minutesToTimeStr(slot.start)}</td>
+              <td>${minutesToTimeStr(slot.end)}</td>
+              <td class="court-${m.court}">${m.court}</td>
+              <td><span class="team-tag" style="background:${colorA}">${m.teamA}</span></td>
+              <td><span class="team-tag" style="background:${colorB}">${m.teamB}</span></td>
+            </tr>
+          `;
+        });
+      });
+
+      html += "</tbody></table>";
+      document.getElementById("scheduleContainer").innerHTML = html;
+    }
+  </script>
+</body>
+</html>

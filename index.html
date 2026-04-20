@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <title>Kampgenerator – Lauvåsen IF</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="header">
+    <img src="lauvasen_logo.png" style="height:70px;">
+    <h1>Kampgenerator – Lauvåsen IF Kanonballturnering 2026</h1>
+    <button id="darkToggle" class="dark-toggle secondary">Dark mode</button>
+  </div>
+
+  <div class="config">
+    <h2>Oppsett</h2>
+
+    <label>Antall lag</label>
+    <select id="numTeams">
+      <option>5</option><option>6</option><option>7</option>
+      <option>8</option><option>9</option><option>10</option>
+    </select>
+
+    <label>Antall baner</label>
+    <select id="numCourts">
+      <option value="1">1 bane</option>
+      <option value="2">2 baner</option>
+    </select>
+
+    <label>Kamp-lengde (min)</label>
+    <input id="matchMinutes" type="number" value="5">
+
+    <label>Pause (min)</label>
+    <input id="breakMinutes" type="number" value="1">
+
+    <label>Starttid</label>
+    <input id="startTime" type="time" value="18:00">
+
+    <h3>Lagnavn</h3>
+    <div id="teamNames"></div>
+
+    <button id="generateBtn">Generer kampoppsett</button>
+    <button id="saveScheduleBtn" class="secondary">Lagre kampoppsett til fil (JSON)</button>
+    <button id="saveHTMLBtn" class="secondary">Lagre kampoppsett som HTML</button>
+    <button onclick="importScheduleFromFile()" class="secondary">Importer kampoppsett fra fil (JSON)</button>
+    <button onclick="importResultsFromFile()" class="secondary">Importer resultater fra fil (JSON)</button>
+    <br><br>
+    <button onclick="window.open('kampoppsett.html','_blank')" class="secondary">
+      Åpne lagret kampoppsett
+    </button>
+    <button onclick="window.open('resultater.html','_blank')" class="secondary">
+      Åpne resultater
+    </button>
+  </div>
+
+  <div class="results">
+    <h2>Kampoppsett</h2>
+    <div id="scheduleContainer"></div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    initDarkMode();
+    loadResults();
+
+    const numTeamsSelect = document.getElementById("numTeams");
+    const teamNamesDiv = document.getElementById("teamNames");
+
+    function renderTeamInputs() {
+      const n = parseInt(numTeamsSelect.value);
+      teamNamesDiv.innerHTML = "";
+      for (let i = 1; i <= n; i++) {
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.id = "team_" + i;
+        inp.value = "Lag " + i;
+        teamNamesDiv.appendChild(inp);
+      }
+    }
+    numTeamsSelect.addEventListener("change", renderTeamInputs);
+    renderTeamInputs();
+
+    document.getElementById("generateBtn").addEventListener("click", () => {
+      const n = parseInt(numTeamsSelect.value);
+      const numCourts = parseInt(document.getElementById("numCourts").value);
+      const matchMinutes = parseInt(document.getElementById("matchMinutes").value);
+      const breakMinutes = parseInt(document.getElementById("breakMinutes").value);
+      const startTime = document.getElementById("startTime").value || "18:00";
+
+      const teams = [];
+      for (let i = 1; i <= n; i++) {
+        teams.push(document.getElementById("team_" + i).value.trim() || ("Lag " + i));
+      }
+
+      const { schedule } = buildSchedule(
+        teams, numCourts, matchMinutes, breakMinutes, startTime
+      );
+
+      lastSchedule = { schedule, teams };
+      saveSchedule(schedule, teams);
+
+      let html = "<table><thead><tr>" +
+        "<th>Runde</th><th>Start</th><th>Slutt</th><th>Bane</th><th>Lag A</th><th>Lag B</th>" +
+        "</tr></thead><tbody>";
+
+      schedule.forEach(slot => {
+        slot.matches.forEach(m => {
+          const colorA = teamColors[teams.indexOf(m.teamA) % teamColors.length];
+          const colorB = teamColors[teams.indexOf(m.teamB) % teamColors.length];
+
+          html += `
+            <tr>
+              <td>${slot.round}</td>
+              <td>${minutesToTimeStr(slot.start)}</td>
+              <td>${minutesToTimeStr(slot.end)}</td>
+              <td class="court-${m.court}">${m.court}</td>
+              <td><span class="team-tag" style="background:${colorA}">${m.teamA}</span></td>
+              <td><span class="team-tag" style="background:${colorB}">${m.teamB}</span></td>
+            </tr>
+          `;
+        });
+      });
+
+      html += "</tbody></table>";
+      document.getElementById("scheduleContainer").innerHTML = html;
+    });
+
+    document.getElementById("saveScheduleBtn").addEventListener("click", () => {
+      const saved = loadSchedule();
+      if (!saved) return alert("Ingen kampoppsett å lagre.");
+      downloadJSON("kampoppsett.json", saved);
+    });
+
+    document.getElementById("saveHTMLBtn").addEventListener("click", () => {
+      if (!lastSchedule) return alert("Generer kampoppsett først.");
+      const html = document.getElementById("scheduleContainer").innerHTML;
+      downloadHTML("kampoppsett.html", html);
+    });
+  </script>
+</body>
+</html>

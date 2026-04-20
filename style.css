@@ -1,0 +1,103 @@
+:root {
+  --bg: #f5f5f5;
+  --fg: #111;
+  --card-bg: #fff;
+  --card-border: rgba(0,0,0,0.1);
+  --table-border: #ddd;
+  --table-header-bg: #eee;
+}
+
+body.dark {
+  --bg: #121212;
+  --fg: #f5f5f5;
+  --card-bg: #1e1e1e;
+  --card-border: rgba(255,255,255,0.1);
+  --table-border: #444;
+  --table-header-bg: #333;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 20px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.config, .results {
+  background: var(--card-bg);
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px var(--card-border);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+th, td {
+  border: 1px solid var(--table-border);
+  padding: 4px 6px;
+  text-align: left;
+}
+
+th {
+  background: var(--table-header-bg);
+}
+
+.team-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.court-A { background: #d9f2ff; }
+.court-B { background: #ffe6cc; }
+
+.score-input {
+  width: 60px;
+}
+
+.reset-btn {
+  cursor: pointer;
+  color: red;
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.dark-toggle {
+  margin-left: auto;
+}
+
+button {
+  padding: 8px 14px;
+  margin-top: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+  font-weight: 600;
+}
+
+button.secondary {
+  background: #fff;
+  color: #222;
+}
+
+body.dark button.secondary {
+  background: #333;
+  color: #f5f5f5;
+}

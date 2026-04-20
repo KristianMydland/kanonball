@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <title>Resultater – Lauvåsen IF</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="header">
+    <img src="lauvasen_logo.png" style="height:70px;">
+    <h1>Resultater – Lauvåsen IF Kanonballturnering 2026</h1>
+    <button id="darkToggle" class="dark-toggle secondary">Dark mode</button>
+  </div>
+
+  <div class="results">
+    <h2>Kampresultater</h2>
+    <div id="resultsContainer"></div>
+    <button id="saveResultsBtn" class="secondary">Lagre resultater til fil (JSON)</button>
+    <button onclick="importResultsFromFile()" class="secondary">Importer resultater fra fil (JSON)</button>
+    <button onclick="importScheduleFromFile()" class="secondary">Importer kampoppsett fra fil (JSON)</button>
+    <button id="resetAllBtn" class="secondary" style="background:#ffdddd; color:#900;">Nullstill ALLE resultater</button>
+
+    </div>
+
+  <div class="results">
+    <h2>Poengtabell</h2>
+
+    <label for="sortStandings">Sorter etter:</label>
+    <select id="sortStandings">
+      <option value="points">Poeng</option>
+      <option value="played">Kamper</option>
+      <option value="team">Lag (A–Å)</option>
+    </select>
+
+    <div id="standingsContainer"></div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    initDarkMode();
+    loadResults();
+
+    const saved = loadSchedule();
+    if (!saved) {
+      document.getElementById("resultsContainer").innerHTML =
+        "<p>Ingen lagret kampoppsett funnet. Generer kampoppsett først.</p>";
+    } else {
+      const { schedule, teams } = saved;
+      lastSchedule = { schedule, teams };
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Runde</th>
+              <th>Start</th>
+              <th>Slutt</th>
+              <th>Bane</th>
+              <th>Lag A</th>
+              <th>Lag B</th>
+              <th>Resultat</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      schedule.forEach(slot => {
+        slot.matches.forEach(m => {
+        const id = `${slot.round}|${m.teamA}|${m.teamB}`;
+          const r = matchResults[id] || { scoreA: "", scoreB: "" };
+
+          html += `
+            <tr>
+              <td>${slot.round}</td>
+              <td>${minutesToTimeStr(slot.start)}</td>
+              <td>${minutesToTimeStr(slot.end)}</td>
+              <td class="court-${m.court}">${m.court}</td>
+              <td>${m.teamA}</td>
+              <td>${m.teamB}</td>
+              <td>
+                <select class="score-input" id="RES_${id}">
+                  <option value="">–</option>
+                  <option value="A" ${r.scoreA == 2 ? "selected" : ""}>${m.teamA} vinner</option>
+                  <option value="D" ${r.scoreA == 1 ? "selected" : ""}>Uavgjort</option>
+                  <option value="B" ${r.scoreB == 2 ? "selected" : ""}>${m.teamB} vinner</option>
+                </select>
+
+                <span class="reset-btn" onclick="resetResult('${id}'); location.reload();">X</span>
+              </td>
+            </tr>
+          `;
+        });
+      });
+
+      html += "</tbody></table>";
+      document.getElementById("resultsContainer").innerHTML = html;
+
+      // Live oppdatering
+      document.addEventListener("input", e => {
+        if (!e.target.id.startsWith("RES_")) return;
+
+        const id = e.target.id.replace("RES_", "");
+        const value = e.target.value;
+
+        let scoreA = 0, scoreB = 0;
+
+        if (value === "A") { scoreA = 2; scoreB = 0; }
+        if (value === "B") { scoreA = 0; scoreB = 2; }
+        if (value === "D") { scoreA = 1; scoreB = 1; }
+
+        registerResult(id, scoreA, scoreB);
+        renderStandings(teams);
+      });
+
+      // Sortering
+      document.getElementById("sortStandings").addEventListener("change", () => {
+        renderStandings(teams);
+      });
+
+      renderStandings(teams);
+    }
+
+    document.getElementById("saveResultsBtn").addEventListener("click", () => {
+      downloadJSON("resultater.json", matchResults);
+    });
+ // Slett alle resultater og nullstill poengtabellen
+  document.getElementById("resetAllBtn").addEventListener("click", () => {
+    if (!confirm("Er du sikker på at du vil slette ALLE resultater? Dette kan ikke angres.")) {
+      return;
+    }
+
+    // Nullstill resultater
+    matchResults = {};
+    saveResults();
+
+    // Oppdater visning
+    alert("Alle resultater er slettet.");
+    location.reload();
+  });
+  </script>
+</body>
+</html>
