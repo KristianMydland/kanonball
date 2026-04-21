@@ -27,15 +27,64 @@ function isAdmin() {
   return localStorage.getItem("is_admin") === "true";
 }
 
+function isIndexPage() {
+  const path = window.location.pathname.toLowerCase();
+  return path.endsWith("/index.html") || path.endsWith("/");
+}
+
 function requireAdmin() {
   if (!isAdmin()) {
-    window.location.href = "login.html";
+    if (!isIndexPage()) {
+      window.location.href = "index.html";
+    }
+    return false;
   }
+
+  return true;
 }
 
 function logout() {
   localStorage.removeItem("is_admin");
-  window.location.href = "login.html";
+  updateAdminVisibility();
+  if (!isIndexPage()) {
+    window.location.href = "index.html";
+  } else {
+    window.location.reload();
+  }
+}
+
+// ----------------------------
+// ADMIN VISIBILITY
+// ----------------------------
+function updateAdminVisibility() {
+  const isAdminUser = isAdmin();
+  const adminLoginBtn = document.getElementById("adminLoginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  
+  // Toggle login/logout buttons
+  if (adminLoginBtn) {
+    adminLoginBtn.style.display = isAdminUser ? "none" : "inline-block";
+  }
+
+  if (logoutBtn) {
+    logoutBtn.style.display = isAdminUser ? "inline-block" : "none";
+  }
+  
+  // Enable/disable all action buttons
+  const actionButtons = document.querySelectorAll(".adminAction");
+  actionButtons.forEach(btn => {
+    btn.disabled = !isAdminUser;
+    btn.style.opacity = isAdminUser ? "1" : "0.5";
+    btn.style.cursor = isAdminUser ? "pointer" : "not-allowed";
+    btn.title = isAdminUser ? "" : "Du må logge inn for å bruke denne funksjonen.";
+  });
+  
+  // Disable all admin input fields (select, input)
+  const adminInputs = document.querySelectorAll(".adminOnly");
+  adminInputs.forEach(input => {
+    input.disabled = !isAdminUser;
+    input.style.opacity = isAdminUser ? "1" : "0.5";
+  });
 }
 
 function saveResults() {
@@ -44,7 +93,15 @@ function saveResults() {
 
 function loadResults() {
   const saved = localStorage.getItem("kanonball_results");
-  if (saved) matchResults = JSON.parse(saved);
+  if (!saved) return;
+
+  try {
+    const parsed = JSON.parse(saved);
+    matchResults = parsed && typeof parsed === "object" ? parsed : {};
+  } catch (err) {
+    matchResults = {};
+    localStorage.removeItem("kanonball_results");
+  }
 }
 
 function saveSchedule(schedule, teams) {
@@ -53,7 +110,14 @@ function saveSchedule(schedule, teams) {
 
 function loadSchedule() {
   const saved = localStorage.getItem("kanonball_schedule");
-  return saved ? JSON.parse(saved) : null;
+  if (!saved) return null;
+
+  try {
+    return JSON.parse(saved);
+  } catch (err) {
+    localStorage.removeItem("kanonball_schedule");
+    return null;
+  }
 }
 
 // ----------------------------
@@ -142,7 +206,7 @@ function buildSchedule(teams, numCourts, matchMinutes, breakMinutes, startTime) 
 
       slotMatches.forEach((m, idx) => {
         slot.matches.push({
-          court: numCourts === 1 ? "A" : (idx === 0 ? "A" : "B"),
+          court: idx < 26 ? String.fromCharCode(65 + idx) : String(idx + 1),
           teamA: m[0],
           teamB: m[1]
         });
@@ -162,11 +226,13 @@ function buildSchedule(teams, numCourts, matchMinutes, breakMinutes, startTime) 
 // RESULTATREGISTRERING
 // ----------------------------
 function registerResult(id, scoreA, scoreB) {
+  if (!isAdmin()) return;
   matchResults[id] = { scoreA, scoreB };
   saveResults();
 }
 
 function resetResult(id) {
+  if (!isAdmin()) return;
   delete matchResults[id];
   saveResults();
 }
@@ -194,11 +260,21 @@ function calculateStandings(teams) {
     const B = standings[teamB];
     if (!A || !B) return;
 
+    const scoreA = Number(r.scoreA);
+    const scoreB = Number(r.scoreB);
+    if (Number.isNaN(scoreA) || Number.isNaN(scoreB)) return;
+
     A.played++;
     B.played++;
 
-    A.points += r.scoreA;
-    B.points += r.scoreB;
+    if (scoreA > scoreB) {
+      A.points += 2;
+    } else if (scoreB > scoreA) {
+      B.points += 2;
+    } else {
+      A.points += 1;
+      B.points += 1;
+    }
   });
 
   const sortMode = document.getElementById("sortStandings")?.value || "points";
@@ -292,7 +368,9 @@ function importJSONFile(callback) {
   input.accept = "application/json";
 
   input.onchange = e => {
-    const file = e.target.files[0];
+    const file = e.target?.files?.[0];
+    if (!file) return;
+
     const reader = new FileReader();
 
     reader.onload = event => {
@@ -302,6 +380,10 @@ function importJSONFile(callback) {
       } catch (err) {
         alert("Kunne ikke lese JSON-filen.");
       }
+    };
+
+    reader.onerror = () => {
+      alert("Kunne ikke lese filen.");
     };
 
     reader.readAsText(file);
@@ -327,14 +409,14 @@ function importScheduleFromFile() {
 // Importer resultater
 function importResultsFromFile() {
   importJSONFile(data => {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      alert("Filen inneholder ikke gyldige resultater.");
+      return;
+    }
+
     matchResults = data;
     saveResults();
     alert("Resultater importert!");
     location.reload();
   });
-}
-
-function logout() {
-  localStorage.removeItem("is_admin");
-  window.location.href = "login.html";
 }

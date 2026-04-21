@@ -8,14 +8,19 @@
 
 <body>
   <script src="script.js"></script>
-  <script>
-    requireAdmin();
-  </script>
 
   <div class="header">
     <img src="lauvasen_logo.png" style="height:70px;">
     <h1>Kampgenerator – Lauvåsen IF Kanonballturnering 2026</h1>
-    <button onclick="logout()" class="secondary">Logg ut</button>
+    <button id="logoutBtn" onclick="logout()" class="secondary" style="display:none;">Logg ut</button>
+    <button id="adminLoginBtn" style="display:block;">Logg inn som administrator</button>
+
+<div id="adminLoginBox" style="display:none; margin-top:10px;">
+  <input type="password" id="adminPassword" placeholder="Passord">
+  <button id="adminSubmitBtn">Logg inn</button>
+  <p id="adminMsg" style="color:red;"></p>
+</div>
+
     <button id="darkToggle" class="dark-toggle secondary">Dark mode</button>
   </div>
 
@@ -23,39 +28,39 @@
     <h2>Oppsett</h2>
 
     <label>Antall lag</label>
-    <select id="numTeams">
+    <select id="numTeams" class="adminOnly">
       <option>5</option><option>6</option><option>7</option>
       <option>8</option><option>9</option><option>10</option>
     </select>
 
     <label>Antall baner</label>
-    <select id="numCourts">
+    <select id="numCourts" class="adminOnly">
       <option value="1">1 bane</option>
       <option value="2">2 baner</option>
     </select>
 
     <label>Kamp-lengde (min)</label>
-    <input id="matchMinutes" type="number" value="5">
+    <input id="matchMinutes" type="number" value="5" class="adminOnly">
 
     <label>Pause (min)</label>
-    <input id="breakMinutes" type="number" value="1">
+    <input id="breakMinutes" type="number" value="1" class="adminOnly">
 
     <label>Starttid</label>
-    <input id="startTime" type="time" value="18:00">
+    <input id="startTime" type="time" value="18:00" class="adminOnly">
 
     <h3>Lagnavn</h3>
     <div id="teamNames"></div>
 
-    <button id="generateBtn">Generer kampoppsett</button>
+    <button id="generateBtn" class="adminAction">Generer kampoppsett</button>
 
-    <button id="saveScheduleBtn" class="secondary">Lagre kampoppsett til fil (JSON)</button>
-    <button id="saveHTMLBtn" class="secondary">Lagre kampoppsett som HTML</button>
+    <button id="saveScheduleBtn" class="adminAction secondary">Lagre kampoppsett til fil (JSON)</button>
+    <button id="saveHTMLBtn" class="adminAction secondary">Lagre kampoppsett som HTML</button>
 
-    <button onclick="importScheduleFromFile()" class="secondary">
+    <button onclick="importScheduleFromFile()" class="adminAction secondary">
       Importer kampoppsett fra fil (JSON)
     </button>
 
-    <button onclick="importResultsFromFile()" class="secondary">
+    <button onclick="importResultsFromFile()" class="adminAction secondary">
       Importer resultater fra fil (JSON)
     </button>
 
@@ -76,7 +81,7 @@
   <script>
     initDarkMode();
     loadResults();
-    requireAdmin();
+    updateAdminVisibility();
     const numTeamsSelect = document.getElementById("numTeams");
     const teamNamesDiv = document.getElementById("teamNames");
 
@@ -88,8 +93,10 @@
         inp.type = "text";
         inp.id = "team_" + i;
         inp.value = "Lag " + i;
+        inp.className = "adminOnly";
         teamNamesDiv.appendChild(inp);
       }
+      updateAdminVisibility();
     }
     numTeamsSelect.addEventListener("change", renderTeamInputs);
     renderTeamInputs();
@@ -150,6 +157,41 @@
       const html = document.getElementById("scheduleContainer").innerHTML;
       downloadHTML("kampoppsett.html", html);
     });
-  </script>
+  // Hash for passordet KB2026
+  const DEFAULT_HASH = "-7c4b0527";
+
+  function hash(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = (h << 5) - h + str.charCodeAt(i);
+      h |= 0;
+    }
+    return h.toString(16);
+  }
+
+  // Vis/skjul login-boks
+  document.getElementById("adminLoginBtn").addEventListener("click", () => {
+    const box = document.getElementById("adminLoginBox");
+    box.style.display = box.style.display === "none" ? "block" : "none";
+  });
+
+  // Logg inn
+  document.getElementById("adminSubmitBtn").addEventListener("click", () => {
+    const pw = document.getElementById("adminPassword").value;
+
+    if (hash(pw) === DEFAULT_HASH) {
+      localStorage.setItem("is_admin", "true");
+      document.getElementById("adminMsg").style.color = "green";
+      document.getElementById("adminMsg").textContent = "Innlogging vellykket";
+
+      // Oppdater UI umiddelbar og reload siden
+      updateAdminVisibility();
+      setTimeout(() => location.reload(), 500);
+    } else {
+      document.getElementById("adminMsg").textContent = "Feil passord.";
+    }
+  });
+</script>
+
 </body>
 </html>

@@ -8,14 +8,12 @@
 
 <body>
   <script src="script.js"></script>
-  <script>
-    requireAdmin();
-  </script>
 
   <div class="header">
     <img src="lauvasen_logo.png" style="height:70px;">
     <h1>Resultater – Lauvåsen IF Kanonballturnering 2026</h1>
-    <button onclick="logout()" class="secondary">Logg ut</button>
+    <button id="logoutBtn" onclick="logout()" class="secondary" style="display:none;">Logg ut</button>
+    <button id="adminLoginBtn" style="display:none;">Logg inn som administrator</button>
     <button id="darkToggle" class="dark-toggle secondary">Dark mode</button>
   </div>
 
@@ -23,17 +21,17 @@
     <h2>Kampresultater</h2>
     <div id="resultsContainer"></div>
 
-    <button id="saveResultsBtn" class="secondary">Lagre resultater til fil (JSON)</button>
+    <button id="saveResultsBtn" class="adminAction secondary">Lagre resultater til fil (JSON)</button>
 
-    <button onclick="importResultsFromFile()" class="secondary">
+    <button onclick="importResultsFromFile()" class="adminAction secondary">
       Importer resultater fra fil (JSON)
     </button>
 
-    <button onclick="importScheduleFromFile()" class="secondary">
+    <button onclick="importScheduleFromFile()" class="adminAction secondary">
       Importer kampoppsett fra fil (JSON)
     </button>
 
-    <button id="resetAllBtn" class="secondary" style="background:#ffdddd; color:#900;">
+    <button id="resetAllBtn" class="adminAction secondary" style="background:#ffdddd; color:#900;">
       Nullstill ALLE resultater
     </button>
   </div>
@@ -54,6 +52,7 @@
   <script>
     initDarkMode();
     loadResults();
+    updateAdminVisibility();
 
     const saved = loadSchedule();
     if (!saved) {
@@ -93,14 +92,14 @@
               <td>${m.teamA}</td>
               <td>${m.teamB}</td>
               <td>
-                <select class="score-input" id="RES_${id}">
+                <select class="score-input adminOnly" id="RES_${id}">
                   <option value="">–</option>
                   <option value="A" ${r.scoreA == 2 ? "selected" : ""}>${m.teamA} vinner</option>
                   <option value="D" ${r.scoreA == 1 ? "selected" : ""}>Uavgjort</option>
                   <option value="B" ${r.scoreB == 2 ? "selected" : ""}>${m.teamB} vinner</option>
                 </select>
 
-                <span class="reset-btn" onclick="resetResult('${id}'); location.reload();">X</span>
+                <span class="reset-btn adminOnly" onclick="resetResult('${id}'); location.reload();">X</span>
               </td>
             </tr>
           `;
@@ -109,9 +108,13 @@
 
       html += "</tbody></table>";
       document.getElementById("resultsContainer").innerHTML = html;
+      
+      // Apply admin restrictions to score inputs
+      updateAdminVisibility();
 
       document.addEventListener("input", e => {
         if (!e.target.id.startsWith("RES_")) return;
+        if (!isAdmin()) return;
 
         const id = e.target.id.replace("RES_", "");
         const value = e.target.value;
