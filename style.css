@@ -65,9 +65,18 @@ th {
 
 .court-A { background: #d9f2ff; }
 .court-B { background: #ffe6cc; }
+.court-C { background: #d4f7d4; }
+.court-D { background: #f9e4ff; }
+.court-E { background: #fff7cc; }
+
+body.dark .court-A { background: #1a4a5e; color: #d9f2ff; }
+body.dark .court-B { background: #5e3a1a; color: #ffe6cc; }
+body.dark .court-C { background: #1a4a1a; color: #d4f7d4; }
+body.dark .court-D { background: #3a1a4a; color: #f9e4ff; }
+body.dark .court-E { background: #4a4a1a; color: #fff7cc; }
 
 .score-input {
-  width: 60px;
+  width: 160px;
 }
 
 .reset-btn {

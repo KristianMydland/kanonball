@@ -327,11 +327,17 @@ function initDarkMode() {
   const btn = document.getElementById("darkToggle");
   if (!btn) return;
 
+  // Restore saved preference before first paint
+  if (localStorage.getItem("kanonball_darkmode") === "true") {
+    document.body.classList.add("dark");
+  }
+  btn.textContent = document.body.classList.contains("dark") ? "Light mode" : "Dark mode";
+
   btn.addEventListener("click", () => {
     document.body.classList.toggle("dark");
-    btn.textContent = document.body.classList.contains("dark")
-      ? "Light mode"
-      : "Dark mode";
+    const isDark = document.body.classList.contains("dark");
+    btn.textContent = isDark ? "Light mode" : "Dark mode";
+    localStorage.setItem("kanonball_darkmode", isDark);
   });
 }
 
