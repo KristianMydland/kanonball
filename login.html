@@ -33,10 +33,11 @@
       return h.toString(16);
     }
     document.getElementById("loginBtn").addEventListener("click", () => {
-    document.getElementById("guestBtn").addEventListener("click", () => {
-      // Sørg for at man IKKE er admin
-      localStorage.removeItem("is_admin");
-      window.location.href = "index.html";
+document.getElementById("guestBtn").addEventListener("click", () => {
+  // Sørg for at man IKKE er admin
+  localStorage.removeItem("is_admin");
+  window.location.href = "index.html";
+});
       const pw = document.getElementById("password").value;
 
       // BRUK KUN DEFAULT_HASH — LocalStorage kan ikke ødelegge passordet lenger
