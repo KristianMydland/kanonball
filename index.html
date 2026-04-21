@@ -45,6 +45,9 @@
     <label>Pause (min)</label>
     <input id="breakMinutes" type="number" value="1" class="adminOnly">
 
+    <label>Pause mellom kamper (min)</label>
+    <input id="breakBetweenMatches" type="number" value="0" class="adminOnly">
+
     <label>Starttid</label>
     <input id="startTime" type="time" value="18:00" class="adminOnly">
 
@@ -106,6 +109,7 @@
       const numCourts = parseInt(document.getElementById("numCourts").value);
       const matchMinutes = parseInt(document.getElementById("matchMinutes").value);
       const breakMinutes = parseInt(document.getElementById("breakMinutes").value);
+      const breakBetweenMatches = parseInt(document.getElementById("breakBetweenMatches").value) || 0;
       const startTime = document.getElementById("startTime").value || "18:00";
 
       const teams = [];
@@ -114,7 +118,7 @@
       }
 
       const { schedule } = buildSchedule(
-        teams, numCourts, matchMinutes, breakMinutes, startTime
+        teams, numCourts, matchMinutes, breakMinutes, startTime, breakBetweenMatches
       );
 
       lastSchedule = { schedule, teams };

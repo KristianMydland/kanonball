@@ -163,7 +163,7 @@ function generateRoundRobin(teams) {
 // ----------------------------
 // ANTI BACK-TO-BACK + SCHEDULE
 // ----------------------------
-function buildSchedule(teams, numCourts, matchMinutes, breakMinutes, startTime) {
+function buildSchedule(teams, numCourts, matchMinutes, breakMinutes, startTime, breakBetweenMatches = 0) {
   const rounds = generateRoundRobin(teams);
   let t = parseTimeToMinutes(startTime);
   const schedule = [];
@@ -213,7 +213,7 @@ function buildSchedule(teams, numCourts, matchMinutes, breakMinutes, startTime) 
       });
 
       schedule.push(slot);
-      t += matchMinutes;
+      t += matchMinutes + breakBetweenMatches;
     }
 
     if (matches.length > 0) t += breakMinutes;
