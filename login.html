@@ -14,16 +14,16 @@
     <input type="password" id="password">
 
     <button id="loginBtn">Logg inn</button>
-    <p id="msg" style="color:red;"></p>
     <button id="guestBtn" style="margin-top:10px;">Fortsett uten innlogging</button>
-    <p id="msg" style="color:red;"></p>
 
+    <p id="msg" style="color:red;"></p>
   </div>
 
   <script>
-    // RIKTIG HASH for "kanonball2026" const DEFAULT_HASH = "-4f1c2a5e";
-    // RIKTIG HASH for "KB2026" 
+    // Sett inn hash for passordet ditt her:
+    // For "KB2026" er hash = -7c4b0527
     const DEFAULT_HASH = "-7c4b0527";
+
     function hash(str) {
       let h = 0;
       for (let i = 0; i < str.length; i++) {
@@ -32,15 +32,10 @@
       }
       return h.toString(16);
     }
-    document.getElementById("loginBtn").addEventListener("click", () => {
-document.getElementById("guestBtn").addEventListener("click", () => {
-  // Sørg for at man IKKE er admin
-  localStorage.removeItem("is_admin");
-  window.location.href = "index.html";
-});
-      const pw = document.getElementById("password").value;
 
-      // BRUK KUN DEFAULT_HASH — LocalStorage kan ikke ødelegge passordet lenger
+    // Logg inn-knapp
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const pw = document.getElementById("password").value;
       const stored = DEFAULT_HASH;
 
       if (hash(pw) === stored) {
@@ -49,6 +44,12 @@ document.getElementById("guestBtn").addEventListener("click", () => {
       } else {
         document.getElementById("msg").textContent = "Feil passord.";
       }
+    });
+
+    // Gjesteknapp
+    document.getElementById("guestBtn").addEventListener("click", () => {
+      localStorage.removeItem("is_admin");
+      window.location.href = "index.html";
     });
   </script>
 </body>
