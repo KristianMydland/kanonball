@@ -1,0 +1,216 @@
+{
+  "schedule": [
+    {
+      "round": 1,
+      "start": 840,
+      "end": 847,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Kanonkulene",
+          "teamB": "TullBall"
+        },
+        {
+          "court": "B",
+          "teamA": "Lova-lynene",
+          "teamB": "Bykle IL"
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "start": 851,
+      "end": 858,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Krossen skole",
+          "teamB": "Lauvåsen IF"
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "start": 865,
+      "end": 872,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "TullBall"
+        },
+        {
+          "court": "B",
+          "teamA": "Kanonkulene",
+          "teamB": "Lauvåsen IF"
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "start": 876,
+      "end": 883,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Lova-lynene",
+          "teamB": "Krossen skole"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "start": 890,
+      "end": 897,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "Bykle IL"
+        },
+        {
+          "court": "B",
+          "teamA": "TullBall",
+          "teamB": "Lauvåsen IF"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "start": 901,
+      "end": 908,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Kanonkulene",
+          "teamB": "Lova-lynene"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "start": 915,
+      "end": 922,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "Lauvåsen IF"
+        },
+        {
+          "court": "B",
+          "teamA": "Bykle IL",
+          "teamB": "Krossen skole"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "start": 926,
+      "end": 933,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "TullBall",
+          "teamB": "Lova-lynene"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "start": 940,
+      "end": 947,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "Krossen skole"
+        },
+        {
+          "court": "B",
+          "teamA": "Lauvåsen IF",
+          "teamB": "Lova-lynene"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "start": 951,
+      "end": 958,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Bykle IL",
+          "teamB": "Kanonkulene"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "start": 965,
+      "end": 972,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "Lova-lynene"
+        },
+        {
+          "court": "B",
+          "teamA": "Krossen skole",
+          "teamB": "Kanonkulene"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "start": 976,
+      "end": 983,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Bykle IL",
+          "teamB": "TullBall"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "start": 990,
+      "end": 997,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "Kanonkulene"
+        },
+        {
+          "court": "B",
+          "teamA": "Krossen skole",
+          "teamB": "TullBall"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "start": 1001,
+      "end": 1008,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Lauvåsen IF",
+          "teamB": "Bykle IL"
+        }
+      ]
+    }
+  ],
+  "teams": [
+    "Randesund Power",
+    "Kanonkulene",
+    "Lova-lynene",
+    "Krossen skole",
+    "Lauvåsen IF",
+    "Bykle IL",
+    "TullBall"
+  ]
+}

@@ -54,11 +54,14 @@
     loadResults();
     updateAdminVisibility();
 
-    const saved = loadSchedule();
-    if (!saved) {
-      document.getElementById("resultsContainer").innerHTML =
-        "<p>Ingen lagret kampoppsett funnet. Generer kampoppsett først.</p>";
-    } else {
+    (async () => {
+      const saved = await loadScheduleWithFallback();
+      if (!saved) {
+        document.getElementById("resultsContainer").innerHTML =
+          "<p>Ingen lagret kampoppsett funnet. Generer kampoppsett først.</p>";
+        return;
+      }
+
       const { schedule, teams } = saved;
       lastSchedule = { schedule, teams };
 
@@ -134,7 +137,7 @@
       });
 
       renderStandings(teams);
-    }
+    })();
 
     document.getElementById("saveResultsBtn").addEventListener("click", () => {
       downloadJSON("resultater.json", matchResults);

@@ -21,11 +21,14 @@
   <script>
     initDarkMode();
 
-    const saved = loadSchedule();
-    if (!saved) {
-      document.getElementById("scheduleContainer").innerHTML =
-        "<p>Ingen lagret kampoppsett funnet.</p>";
-    } else {
+    (async () => {
+      const saved = await loadScheduleWithFallback();
+      if (!saved) {
+        document.getElementById("scheduleContainer").innerHTML =
+          "<p>Ingen lagret kampoppsett funnet.</p>";
+        return;
+      }
+
       const { schedule, teams } = saved;
 
       let html = "<table><thead><tr>" +
@@ -52,7 +55,7 @@
 
       html += "</tbody></table>";
       document.getElementById("scheduleContainer").innerHTML = html;
-    }
+    })();
   </script>
 </body>
 </html>

@@ -120,6 +120,28 @@ function loadSchedule() {
   }
 }
 
+function isValidSchedulePayload(data) {
+  return !!data && Array.isArray(data.schedule) && Array.isArray(data.teams);
+}
+
+async function loadScheduleWithFallback() {
+  const cached = loadSchedule();
+  if (isValidSchedulePayload(cached)) return cached;
+
+  try {
+    const response = await fetch("kampoppsett.json", { cache: "no-store" });
+    if (!response.ok) return null;
+
+    const fromFile = await response.json();
+    if (!isValidSchedulePayload(fromFile)) return null;
+
+    saveSchedule(fromFile.schedule, fromFile.teams);
+    return fromFile;
+  } catch (err) {
+    return null;
+  }
+}
+
 // ----------------------------
 // TID
 // ----------------------------

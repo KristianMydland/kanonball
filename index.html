@@ -150,8 +150,8 @@
       document.getElementById("scheduleContainer").innerHTML = html;
     });
 
-    document.getElementById("saveScheduleBtn").addEventListener("click", () => {
-      const saved = loadSchedule();
+    document.getElementById("saveScheduleBtn").addEventListener("click", async () => {
+      const saved = await loadScheduleWithFallback();
       if (!saved) return alert("Ingen kampoppsett å lagre.");
       downloadJSON("kampoppsett.json", saved);
     });
