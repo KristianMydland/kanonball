@@ -15,6 +15,9 @@
 
     <button id="loginBtn">Logg inn</button>
     <p id="msg" style="color:red;"></p>
+    <button id="guestBtn" style="margin-top:10px;">Fortsett uten innlogging</button>
+    <p id="msg" style="color:red;"></p>
+
   </div>
 
   <script>
@@ -30,6 +33,9 @@
       return h.toString(16);
     }
     document.getElementById("loginBtn").addEventListener("click", () => {
+        // Sørg for at man IKKE er admin
+      localStorage.removeItem("is_admin");
+      window.location.href = "index.html";
       const pw = document.getElementById("password").value;
 
       // BRUK KUN DEFAULT_HASH — LocalStorage kan ikke ødelegge passordet lenger
