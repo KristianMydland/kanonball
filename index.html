@@ -28,16 +28,18 @@
     <h2>Oppsett</h2>
 
     <label>Antall lag</label>
-    <select id="numTeams" class="adminOnly">
-      <option>5</option><option>6</option><option>7</option>
-      <option>8</option><option>9</option><option>10</option>
-    </select>
+    <div class="counter-control">
+      <button id="numTeamsMinus" type="button" class="adminAction secondary">-</button>
+      <input id="numTeams" type="number" value="5" min="2" max="30" readonly class="adminOnly counter-value">
+      <button id="numTeamsPlus" type="button" class="adminAction secondary">+</button>
+    </div>
 
     <label>Antall baner</label>
-    <select id="numCourts" class="adminOnly">
-      <option value="1">1 bane</option>
-      <option value="2">2 baner</option>
-    </select>
+    <div class="counter-control">
+      <button id="numCourtsMinus" type="button" class="adminAction secondary">-</button>
+      <input id="numCourts" type="number" value="2" min="1" max="10" readonly class="adminOnly counter-value">
+      <button id="numCourtsPlus" type="button" class="adminAction secondary">+</button>
+    </div>
 
     <label>Kamp-lengde (min)</label>
     <input id="matchMinutes" type="number" value="5" class="adminOnly">
@@ -67,28 +69,7 @@
       Importer resultater fra fil (JSON)
     </button>
 
-    <h3>Publiser kampoppsett til GitHub</h3>
-    <label>GitHub owner</label>
-    <input id="ghOwner" type="text" placeholder="f.eks. brukernavn" class="adminOnly">
-
-    <label>GitHub repo</label>
-    <input id="ghRepo" type="text" placeholder="f.eks. Kanonball_Generator" class="adminOnly">
-
-    <label>Branch</label>
-    <input id="ghBranch" type="text" value="main" class="adminOnly">
-
-    <label>Filsti i repo</label>
-    <input id="ghPath" type="text" value="kampoppsett.json" class="adminOnly">
-
-    <label>GitHub token (kan lagres lokalt - usikkert)</label>
-    <input id="ghToken" type="password" placeholder="Fine-grained token med Contents: write" class="adminOnly">
-    <label>
-      <input id="ghRememberToken" type="checkbox" class="adminOnly"> Husk token i nettleseren (usikkert)
-    </label>
-
-    <button id="publishGitHubBtn" class="adminAction secondary">Publiser til GitHub</button>
-    <button id="clearGitHubTokenBtn" class="adminAction secondary">Slett lagret token</button>
-    <p id="publishGitHubMsg"></p>
+    <button id="openPublishModalBtn" class="adminAction secondary">Publiser kampoppsett til GitHub</button>
 
     <br><br>
     <button onclick="window.open('kampoppsett.html','_blank')" class="secondary">
@@ -99,6 +80,38 @@
       Åpne resultater
     </button>
   </div>
+
+  <div id="publishModalOverlay" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header-row">
+        <h3>Publiser kampoppsett til GitHub</h3>
+        <button id="closePublishModalBtn" type="button" class="secondary">Lukk</button>
+      </div>
+
+      <label>GitHub owner</label>
+      <input id="ghOwner" type="text" placeholder="f.eks. brukernavn" class="adminOnly">
+
+      <label>GitHub repo</label>
+      <input id="ghRepo" type="text" placeholder="f.eks. Kanonball_Generator" class="adminOnly">
+
+      <label>Branch</label>
+      <input id="ghBranch" type="text" value="main" class="adminOnly">
+
+      <label>Filsti i repo</label>
+      <input id="ghPath" type="text" value="kampoppsett.json" class="adminOnly">
+
+      <label>GitHub token (kan lagres lokalt - usikkert)</label>
+      <input id="ghToken" type="password" placeholder="Fine-grained token med Contents: write" class="adminOnly">
+      <label>
+        <input id="ghRememberToken" type="checkbox" class="adminOnly"> Husk token i nettleseren (usikkert)
+      </label>
+
+      <button id="publishGitHubBtn" class="adminAction secondary">Publiser til GitHub</button>
+      <button id="clearGitHubTokenBtn" class="adminAction secondary">Slett lagret token</button>
+      <p id="publishGitHubMsg"></p>
+    </div>
+  </div>
+
   <div class="results">
     <h2>Kampoppsett</h2>
     <div id="scheduleContainer"></div>
@@ -108,45 +121,70 @@
     initDarkMode();
     loadResults();
     updateAdminVisibility();
-    const numTeamsSelect = document.getElementById("numTeams");
+    const numTeamsInput = document.getElementById("numTeams");
+    const numCourtsInput = document.getElementById("numCourts");
+    const numTeamsMinusBtn = document.getElementById("numTeamsMinus");
+    const numTeamsPlusBtn = document.getElementById("numTeamsPlus");
+    const numCourtsMinusBtn = document.getElementById("numCourtsMinus");
+    const numCourtsPlusBtn = document.getElementById("numCourtsPlus");
+    const openPublishModalBtn = document.getElementById("openPublishModalBtn");
+    const closePublishModalBtn = document.getElementById("closePublishModalBtn");
+    const publishModalOverlay = document.getElementById("publishModalOverlay");
     const teamNamesDiv = document.getElementById("teamNames");
+    let teamNamesMemory = [];
+
+    function adjustCounter(inputEl, delta) {
+      const min = parseInt(inputEl.min || "1", 10);
+      const max = parseInt(inputEl.max || "999", 10);
+      const current = parseInt(inputEl.value || String(min), 10);
+      const next = Math.max(min, Math.min(max, current + delta));
+      inputEl.value = String(next);
+      return next;
+    }
 
     function renderTeamInputs() {
-      const n = parseInt(numTeamsSelect.value);
+      const n = parseInt(numTeamsInput.value, 10);
       teamNamesDiv.innerHTML = "";
       for (let i = 1; i <= n; i++) {
+        const row = document.createElement("div");
+        row.className = "team-row";
+
         const inp = document.createElement("input");
         inp.type = "text";
         inp.id = "team_" + i;
-        inp.value = "Lag " + i;
+        inp.value = teamNamesMemory[i - 1] || ("Lag " + i);
         inp.className = "adminOnly";
-        teamNamesDiv.appendChild(inp);
+
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.textContent = "x";
+        delBtn.className = "adminAction secondary delete-team-btn";
+        delBtn.dataset.index = String(i - 1);
+
+        row.appendChild(inp);
+        row.appendChild(delBtn);
+        teamNamesDiv.appendChild(row);
       }
       updateAdminVisibility();
     }
-    numTeamsSelect.addEventListener("change", renderTeamInputs);
-    renderTeamInputs();
 
-    document.getElementById("generateBtn").addEventListener("click", () => {
-      const n = parseInt(numTeamsSelect.value);
-      const numCourts = parseInt(document.getElementById("numCourts").value);
-      const matchMinutes = parseInt(document.getElementById("matchMinutes").value);
-      const breakMinutes = parseInt(document.getElementById("breakMinutes").value);
-      const breakBetweenMatches = parseInt(document.getElementById("breakBetweenMatches").value) || 0;
-      const startTime = document.getElementById("startTime").value || "18:00";
+    function rememberCurrentTeamNames() {
+      const n = parseInt(numTeamsInput.value, 10);
+      const next = [];
 
-      const teams = [];
       for (let i = 1; i <= n; i++) {
-        teams.push(document.getElementById("team_" + i).value.trim() || ("Lag " + i));
+        const input = document.getElementById("team_" + i);
+        if (input) {
+          next.push(input.value);
+        } else {
+          next.push(teamNamesMemory[i - 1] || ("Lag " + i));
+        }
       }
 
-      const { schedule } = buildSchedule(
-        teams, numCourts, matchMinutes, breakMinutes, startTime, breakBetweenMatches
-      );
+      teamNamesMemory = next;
+    }
 
-      lastSchedule = { schedule, teams };
-      saveSchedule(schedule, teams);
-
+    function renderScheduleTable(schedule, teams) {
       let html = "<table><thead><tr>" +
         "<th>Runde</th><th>Start</th><th>Slutt</th><th>Bane</th><th>Lag A</th><th>Lag B</th>" +
         "</tr></thead><tbody>";
@@ -171,6 +209,117 @@
 
       html += "</tbody></table>";
       document.getElementById("scheduleContainer").innerHTML = html;
+    }
+
+    function applyScheduleToIndex(data) {
+      if (!data || !Array.isArray(data.schedule) || !Array.isArray(data.teams)) return;
+
+      const teams = data.teams;
+      const schedule = data.schedule;
+
+      const minTeams = parseInt(numTeamsInput.min || "2", 10);
+      const maxTeams = parseInt(numTeamsInput.max || "30", 10);
+      const safeTeamCount = Math.max(minTeams, Math.min(maxTeams, teams.length));
+      numTeamsInput.value = String(safeTeamCount);
+      teamNamesMemory = teams.slice(0, safeTeamCount);
+
+      renderTeamInputs();
+
+      teams.forEach((teamName, idx) => {
+        const input = document.getElementById("team_" + (idx + 1));
+        if (input) input.value = teamName;
+      });
+
+      lastSchedule = { schedule, teams };
+      renderScheduleTable(schedule, teams);
+    }
+
+    window.handleScheduleImported = applyScheduleToIndex;
+
+    openPublishModalBtn.addEventListener("click", () => {
+      publishModalOverlay.classList.add("open");
+    });
+
+    closePublishModalBtn.addEventListener("click", () => {
+      publishModalOverlay.classList.remove("open");
+    });
+
+    publishModalOverlay.addEventListener("click", e => {
+      if (e.target === publishModalOverlay) {
+        publishModalOverlay.classList.remove("open");
+      }
+    });
+
+    numTeamsMinusBtn.addEventListener("click", () => {
+      rememberCurrentTeamNames();
+      adjustCounter(numTeamsInput, -1);
+      renderTeamInputs();
+    });
+
+    numTeamsPlusBtn.addEventListener("click", () => {
+      rememberCurrentTeamNames();
+      adjustCounter(numTeamsInput, 1);
+      renderTeamInputs();
+    });
+
+    teamNamesDiv.addEventListener("input", () => {
+      rememberCurrentTeamNames();
+    });
+
+    teamNamesDiv.addEventListener("click", e => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!target.classList.contains("delete-team-btn")) return;
+      if (!isAdmin()) return;
+
+      rememberCurrentTeamNames();
+
+      const idx = parseInt(target.dataset.index || "-1", 10);
+      if (idx < 0 || idx >= teamNamesMemory.length) return;
+
+      const minTeams = parseInt(numTeamsInput.min || "2", 10);
+      if (teamNamesMemory.length <= minTeams) return;
+
+      teamNamesMemory.splice(idx, 1);
+      numTeamsInput.value = String(teamNamesMemory.length);
+      renderTeamInputs();
+    });
+
+    numCourtsMinusBtn.addEventListener("click", () => {
+      adjustCounter(numCourtsInput, -1);
+    });
+
+    numCourtsPlusBtn.addEventListener("click", () => {
+      adjustCounter(numCourtsInput, 1);
+    });
+
+    renderTeamInputs();
+
+    loadScheduleWithFallback().then(saved => {
+      if (saved) applyScheduleToIndex(saved);
+    });
+
+    document.getElementById("generateBtn").addEventListener("click", () => {
+      const n = parseInt(numTeamsInput.value, 10);
+      const numCourts = parseInt(numCourtsInput.value, 10);
+      const matchMinutes = parseInt(document.getElementById("matchMinutes").value);
+      const breakMinutes = parseInt(document.getElementById("breakMinutes").value);
+      const breakBetweenMatches = parseInt(document.getElementById("breakBetweenMatches").value) || 0;
+      const startTime = document.getElementById("startTime").value || "18:00";
+
+      const teams = [];
+      for (let i = 1; i <= n; i++) {
+        teams.push(document.getElementById("team_" + i).value.trim() || ("Lag " + i));
+      }
+
+      const { schedule } = buildSchedule(
+        teams, numCourts, matchMinutes, breakMinutes, startTime, breakBetweenMatches
+      );
+
+      lastSchedule = { schedule, teams };
+      saveSchedule(schedule, teams);
+
+      renderScheduleTable(schedule, teams);
     });
 
     document.getElementById("saveScheduleBtn").addEventListener("click", async () => {

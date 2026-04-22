@@ -597,6 +597,13 @@ function importScheduleFromFile() {
     }
 
     saveSchedule(data.schedule, data.teams);
+
+    if (typeof window.handleScheduleImported === "function") {
+      window.handleScheduleImported(data);
+      alert("Kampoppsett importert!");
+      return;
+    }
+
     alert("Kampoppsett importert!");
     location.reload();
   });
