@@ -250,43 +250,61 @@ async function publishScheduleToGitHub(payload, config, token) {
     "Content-Type": "application/json"
   };
 
-  let sha;
-  try {
-    const getResp = await fetch(`${baseUrl}?ref=${encodeURIComponent(branch)}`, {
-      method: "GET",
-      headers
-    });
+  async function fetchLatestSha() {
+    try {
+      const getResp = await fetch(`${baseUrl}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, {
+        method: "GET",
+        headers,
+        cache: "no-store"
+      });
 
-    if (getResp.ok) {
-      const existing = await getResp.json();
-      sha = existing.sha;
-    } else if (getResp.status !== 404) {
+      if (getResp.ok) {
+        const existing = await getResp.json();
+        return existing.sha;
+      }
+
+      if (getResp.status === 404) return undefined;
+
       const getErr = await getResp.json().catch(() => ({}));
       throw new Error(getErr.message || "Kunne ikke hente eksisterende GitHub-fil.");
+    } catch (err) {
+      if (err instanceof Error) throw err;
+      throw new Error("Feil ved kommunikasjon med GitHub.");
     }
-  } catch (err) {
-    if (err instanceof Error) throw err;
-    throw new Error("Feil ved kommunikasjon med GitHub.");
   }
 
-  const content = toBase64Utf8(JSON.stringify(payload, null, 2));
-  const body = {
-    message: `Update schedule ${new Date().toISOString()}`,
-    content,
-    branch
-  };
+  async function putContent(sha) {
+    const body = {
+      message: `Update schedule ${new Date().toISOString()}`,
+      content: toBase64Utf8(JSON.stringify(payload, null, 2)),
+      branch
+    };
 
-  if (sha) body.sha = sha;
+    if (sha) body.sha = sha;
 
-  const putResp = await fetch(baseUrl, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify(body)
-  });
+    return fetch(baseUrl, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(body),
+      cache: "no-store"
+    });
+  }
+
+  let sha = await fetchLatestSha();
+  let putResp = await putContent(sha);
 
   if (!putResp.ok) {
     const putErr = await putResp.json().catch(() => ({}));
-    throw new Error(putErr.message || "Kunne ikke publisere til GitHub.");
+    const message = putErr.message || "Kunne ikke publisere til GitHub.";
+
+    if (/does not match/i.test(message) || /sha/i.test(message)) {
+      sha = await fetchLatestSha();
+      putResp = await putContent(sha);
+      if (putResp.ok) return putResp.json();
+    }
+
+    const retryErr = await putResp.json().catch(() => putErr);
+    throw new Error(retryErr.message || message);
   }
 
   return putResp.json();
