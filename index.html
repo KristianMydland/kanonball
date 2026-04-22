@@ -120,6 +120,7 @@
   <script>
     initDarkMode();
     loadResults();
+    initAdminLogin();
     updateAdminVisibility();
     const numTeamsInput = document.getElementById("numTeams");
     const numCourtsInput = document.getElementById("numCourts");
@@ -414,41 +415,6 @@
       publishGitHubMsg.style.color = "#666";
       publishGitHubMsg.textContent = "Lagret GitHub-token slettet.";
     });
-
-  // Hash for passordet KB2026
-  const DEFAULT_HASH = "-7c4b0527";
-
-  function hash(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-      h = (h << 5) - h + str.charCodeAt(i);
-      h |= 0;
-    }
-    return h.toString(16);
-  }
-
-  // Vis/skjul login-boks
-  document.getElementById("adminLoginBtn").addEventListener("click", () => {
-    const box = document.getElementById("adminLoginBox");
-    box.style.display = box.style.display === "none" ? "block" : "none";
-  });
-
-  // Logg inn
-  document.getElementById("adminSubmitBtn").addEventListener("click", () => {
-    const pw = document.getElementById("adminPassword").value;
-
-    if (hash(pw) === DEFAULT_HASH) {
-      localStorage.setItem("is_admin", "true");
-      document.getElementById("adminMsg").style.color = "green";
-      document.getElementById("adminMsg").textContent = "Innlogging vellykket";
-
-      // Oppdater UI umiddelbar og reload siden
-      updateAdminVisibility();
-      setTimeout(() => location.reload(), 500);
-    } else {
-      document.getElementById("adminMsg").textContent = "Feil passord.";
-    }
-  });
 </script>
 
 </body>

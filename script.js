@@ -94,6 +94,37 @@ function updateAdminVisibility() {
   });
 }
 
+function initAdminLogin() {
+  const loginBtn = document.getElementById("adminLoginBtn");
+  const loginBox = document.getElementById("adminLoginBox");
+  const passwordInput = document.getElementById("adminPassword");
+  const submitBtn = document.getElementById("adminSubmitBtn");
+  const messageEl = document.getElementById("adminMsg");
+  if (!loginBtn || !loginBox || !passwordInput || !submitBtn || !messageEl) return;
+
+  const DEFAULT_HASH = "-7c4b0527";
+
+  loginBtn.addEventListener("click", () => {
+    loginBox.style.display = loginBox.style.display === "none" ? "block" : "none";
+  });
+
+  submitBtn.addEventListener("click", () => {
+    const pw = passwordInput.value;
+
+    if (hash(pw) === DEFAULT_HASH) {
+      localStorage.setItem("is_admin", "true");
+      messageEl.style.color = "green";
+      messageEl.textContent = "Innlogging vellykket";
+
+      updateAdminVisibility();
+      setTimeout(() => window.location.reload(), 500);
+    } else {
+      messageEl.style.color = "red";
+      messageEl.textContent = "Feil passord.";
+    }
+  });
+}
+
 function saveResults() {
   localStorage.setItem("kanonball_results", JSON.stringify(matchResults));
 }
