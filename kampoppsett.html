@@ -14,6 +14,7 @@
   </div>
 
   <div class="results">
+    <div id="liveSourceBanner" class="live-source-banner" style="display:none;"></div>
     <div id="scheduleContainer"></div>
   </div>
 
@@ -30,6 +31,7 @@
       }
 
       const { schedule, teams } = saved;
+      renderLiveSourceBanner("liveSourceBanner");
 
       let html = "<table><thead><tr>" +
         "<th>Runde</th><th>Start</th><th>Slutt</th><th>Bane</th><th>Lag A</th><th>Lag B</th>" +

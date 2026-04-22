@@ -109,6 +109,11 @@
       <button id="publishGitHubBtn" class="adminAction secondary">Publiser til GitHub</button>
       <button id="clearGitHubTokenBtn" class="adminAction secondary">Slett lagret token</button>
       <p id="publishGitHubMsg"></p>
+
+      <h4>Publiseringshistorikk</h4>
+      <select id="publishHistorySelect" class="adminOnly"></select>
+      <button id="rollbackPublishBtn" class="adminAction secondary">Rull tilbake valgt versjon</button>
+      <button id="clearPublishHistoryBtn" class="adminAction secondary">Slett historikk</button>
     </div>
   </div>
 
@@ -313,6 +318,20 @@
         teams.push(document.getElementById("team_" + i).value.trim() || ("Lag " + i));
       }
 
+      const validationErrors = validateBeforeGenerate(
+        teams,
+        numCourts,
+        matchMinutes,
+        breakMinutes,
+        breakBetweenMatches,
+        startTime
+      );
+
+      if (validationErrors.length > 0) {
+        alert(validationErrors.join("\n"));
+        return;
+      }
+
       const { schedule } = buildSchedule(
         teams, numCourts, matchMinutes, breakMinutes, startTime, breakBetweenMatches
       );
@@ -344,6 +363,89 @@
     const publishGitHubBtn = document.getElementById("publishGitHubBtn");
     const clearGitHubTokenBtn = document.getElementById("clearGitHubTokenBtn");
     const publishGitHubMsg = document.getElementById("publishGitHubMsg");
+    const publishHistorySelect = document.getElementById("publishHistorySelect");
+    const rollbackPublishBtn = document.getElementById("rollbackPublishBtn");
+    const clearPublishHistoryBtn = document.getElementById("clearPublishHistoryBtn");
+
+    function loadPublishHistory() {
+      try {
+        const raw = localStorage.getItem("kanonball_publish_history");
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function savePublishHistory(history) {
+      localStorage.setItem("kanonball_publish_history", JSON.stringify(history.slice(0, 5)));
+    }
+
+    function refreshPublishHistoryUI() {
+      const history = loadPublishHistory();
+      publishHistorySelect.innerHTML = "";
+
+      if (history.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Ingen historikk";
+        publishHistorySelect.appendChild(opt);
+        rollbackPublishBtn.disabled = true;
+        return;
+      }
+
+      history.forEach((entry, index) => {
+        const opt = document.createElement("option");
+        opt.value = String(index);
+        opt.textContent = `${new Date(entry.time).toLocaleString("no-NO")} • ${entry.config.owner}/${entry.config.repo}:${entry.config.path}`;
+        publishHistorySelect.appendChild(opt);
+      });
+
+      rollbackPublishBtn.disabled = false;
+    }
+
+    function pushPublishHistory(payload, config) {
+      const history = loadPublishHistory();
+      history.unshift({
+        time: new Date().toISOString(),
+        payload: JSON.parse(JSON.stringify(payload)),
+        config: JSON.parse(JSON.stringify(config))
+      });
+      savePublishHistory(history);
+      refreshPublishHistoryUI();
+    }
+
+    function validateBeforeGenerate(teams, numCourts, matchMinutes, breakMinutes, breakBetweenMatches, startTime) {
+      const errors = [];
+
+      if (!Number.isInteger(numCourts) || numCourts < 1 || numCourts > 10) {
+        errors.push("Antall baner må være mellom 1 og 10.");
+      }
+      if (!Number.isInteger(matchMinutes) || matchMinutes < 1 || matchMinutes > 120) {
+        errors.push("Kamp-lengde må være mellom 1 og 120 minutter.");
+      }
+      if (!Number.isInteger(breakMinutes) || breakMinutes < 0 || breakMinutes > 60) {
+        errors.push("Pause må være mellom 0 og 60 minutter.");
+      }
+      if (!Number.isInteger(breakBetweenMatches) || breakBetweenMatches < 0 || breakBetweenMatches > 60) {
+        errors.push("Pause mellom kamper må være mellom 0 og 60 minutter.");
+      }
+      if (!startTime || !/^\d{2}:\d{2}$/.test(startTime)) {
+        errors.push("Starttid må være gyldig (HH:MM).");
+      }
+
+      const normalized = teams.map(t => (t || "").trim());
+      if (normalized.some(t => !t)) {
+        errors.push("Alle lagnavn må fylles ut.");
+      }
+
+      const lower = normalized.map(t => t.toLowerCase());
+      if (new Set(lower).size !== lower.length) {
+        errors.push("Lagnavn må være unike.");
+      }
+
+      return errors;
+    }
 
     const savedGitHubPublishConfig = JSON.parse(localStorage.getItem("kanonball_github_publish_config") || "null");
     const savedGitHubToken = localStorage.getItem("kanonball_github_publish_token") || "";
@@ -359,6 +461,8 @@
       ghTokenInput.value = savedGitHubToken;
       ghRememberTokenInput.checked = true;
     }
+
+    refreshPublishHistoryUI();
 
     publishGitHubBtn.addEventListener("click", async () => {
       const payload = await loadScheduleWithFallback();
@@ -388,6 +492,7 @@
 
       try {
         await publishScheduleToGitHub(payload, config, token);
+        pushPublishHistory(payload, config);
 
         localStorage.setItem("kanonball_github_publish_config", JSON.stringify(config));
         if (ghRememberTokenInput.checked) {
@@ -406,6 +511,50 @@
         publishGitHubBtn.disabled = false;
         updateAdminVisibility();
       }
+    });
+
+    rollbackPublishBtn.addEventListener("click", async () => {
+      const token = ghTokenInput.value.trim();
+      if (!token) {
+        publishGitHubMsg.style.color = "#c00";
+        publishGitHubMsg.textContent = "Skriv inn GitHub token for rollback.";
+        return;
+      }
+
+      const selectedIndex = parseInt(publishHistorySelect.value || "-1", 10);
+      const history = loadPublishHistory();
+      const entry = history[selectedIndex];
+      if (!entry) {
+        publishGitHubMsg.style.color = "#c00";
+        publishGitHubMsg.textContent = "Velg en historikk-versjon først.";
+        return;
+      }
+
+      rollbackPublishBtn.disabled = true;
+      publishGitHubMsg.style.color = "#666";
+      publishGitHubMsg.textContent = "Ruller tilbake publisert versjon...";
+
+      try {
+        await publishScheduleToGitHub(entry.payload, entry.config, token);
+        localStorage.setItem("kanonball_github_publish_config", JSON.stringify(entry.config));
+        publishGitHubMsg.style.color = "green";
+        publishGitHubMsg.textContent = "Rollback fullført.";
+      } catch (err) {
+        publishGitHubMsg.style.color = "#c00";
+        publishGitHubMsg.textContent = err instanceof Error ? err.message : "Ukjent feil ved rollback.";
+      } finally {
+        rollbackPublishBtn.disabled = false;
+        refreshPublishHistoryUI();
+        updateAdminVisibility();
+      }
+    });
+
+    clearPublishHistoryBtn.addEventListener("click", () => {
+      localStorage.removeItem("kanonball_publish_history");
+      refreshPublishHistoryUI();
+      publishGitHubMsg.style.color = "#666";
+      publishGitHubMsg.textContent = "Publiseringshistorikk slettet.";
+      updateAdminVisibility();
     });
 
     clearGitHubTokenBtn.addEventListener("click", () => {

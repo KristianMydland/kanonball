@@ -9,6 +9,11 @@ const teamColors = [
 
 let matchResults = {};
 let lastSchedule = null;
+let lastScheduleSourceMeta = {
+  source: "unknown",
+  fetchedAt: null,
+  publishedAt: null
+};
 
 const defaultPublishedScheduleSource = {
   owner: "KristianMydland",
@@ -142,6 +147,64 @@ function loadResults() {
   }
 }
 
+function isValidResultsPayload(data) {
+  return !!data && typeof data === "object" && !Array.isArray(data);
+}
+
+function buildSiblingPath(path, fileName) {
+  const parts = (path || "").split("/").filter(Boolean);
+  if (parts.length === 0) return fileName;
+  parts[parts.length - 1] = fileName;
+  return parts.join("/");
+}
+
+async function loadPublishedResults() {
+  const source = getPublishedScheduleSource();
+  const resultsPath = buildSiblingPath(source.path, "resultater.json");
+  const resultsSource = {
+    owner: source.owner,
+    repo: source.repo,
+    branch: source.branch,
+    path: resultsPath
+  };
+
+  try {
+    const response = await fetch(buildGitHubRawUrl(resultsSource), { cache: "no-store" });
+    if (!response.ok) return null;
+
+    const payload = await response.json();
+    if (!isValidResultsPayload(payload)) return null;
+
+    matchResults = payload;
+    saveResults();
+    return payload;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadSharedResultsWithFallback() {
+  const published = await loadPublishedResults();
+  if (isValidResultsPayload(published)) return published;
+
+  try {
+    const response = await fetch("resultater.json", { cache: "no-store" });
+    if (response.ok) {
+      const payload = await response.json();
+      if (isValidResultsPayload(payload)) {
+        matchResults = payload;
+        saveResults();
+        return payload;
+      }
+    }
+  } catch (err) {
+    // fall through to local cache
+  }
+
+  loadResults();
+  return isValidResultsPayload(matchResults) ? matchResults : {};
+}
+
 function saveSchedule(schedule, teams) {
   localStorage.setItem("kanonball_schedule", JSON.stringify({ schedule, teams }));
 }
@@ -160,6 +223,46 @@ function loadSchedule() {
 
 function isValidSchedulePayload(data) {
   return !!data && Array.isArray(data.schedule) && Array.isArray(data.teams);
+}
+
+function setLastScheduleSourceMeta(source, payload) {
+  lastScheduleSourceMeta = {
+    source,
+    fetchedAt: new Date().toISOString(),
+    publishedAt: payload?._meta?.publishedAt || null
+  };
+}
+
+function getLastScheduleSourceMeta() {
+  return lastScheduleSourceMeta;
+}
+
+function formatTimeFromIso(iso) {
+  if (!iso) return "ukjent";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "ukjent";
+  return d.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" });
+}
+
+function renderLiveSourceBanner(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+
+  const meta = getLastScheduleSourceMeta();
+  if (meta.source === "unknown") {
+    el.style.display = "none";
+    return;
+  }
+
+  const sourceText = meta.source === "github"
+    ? "Live versjon fra GitHub"
+    : meta.source === "file"
+      ? "Lokal filversjon"
+      : "Lokal cacheversjon";
+
+  const timeText = formatTimeFromIso(meta.publishedAt || meta.fetchedAt);
+  el.textContent = `${sourceText} • sist oppdatert kl. ${timeText}`;
+  el.style.display = "block";
 }
 
 function getPublishedScheduleSource() {
@@ -200,7 +303,9 @@ async function loadPublishedSchedule() {
     if (!response.ok) return null;
 
     const payload = await response.json();
-    return isValidSchedulePayload(payload) ? payload : null;
+    if (!isValidSchedulePayload(payload)) return null;
+    setLastScheduleSourceMeta("github", payload);
+    return payload;
   } catch (err) {
     return null;
   }
@@ -208,7 +313,10 @@ async function loadPublishedSchedule() {
 
 async function loadScheduleWithFallback() {
   const cached = loadSchedule();
-  if (isValidSchedulePayload(cached)) return cached;
+  if (isValidSchedulePayload(cached)) {
+    setLastScheduleSourceMeta("cache", cached);
+    return cached;
+  }
 
   try {
     const response = await fetch("kampoppsett.json", { cache: "no-store" });
@@ -218,6 +326,7 @@ async function loadScheduleWithFallback() {
     if (!isValidSchedulePayload(fromFile)) return null;
 
     saveSchedule(fromFile.schedule, fromFile.teams);
+    setLastScheduleSourceMeta("file", fromFile);
     return fromFile;
   } catch (err) {
     return null;
@@ -234,7 +343,9 @@ async function loadSharedScheduleWithFallback() {
       if (!response.ok) return null;
 
       const payload = await response.json();
-      return isValidSchedulePayload(payload) ? payload : null;
+      if (!isValidSchedulePayload(payload)) return null;
+      setLastScheduleSourceMeta("file", payload);
+      return payload;
     } catch (err) {
       return null;
     }
@@ -243,7 +354,12 @@ async function loadSharedScheduleWithFallback() {
   if (isValidSchedulePayload(fromFile)) return fromFile;
 
   const cached = loadSchedule();
-  return isValidSchedulePayload(cached) ? cached : null;
+  if (isValidSchedulePayload(cached)) {
+    setLastScheduleSourceMeta("cache", cached);
+    return cached;
+  }
+
+  return null;
 }
 
 function toBase64Utf8(str) {
@@ -305,9 +421,18 @@ async function publishScheduleToGitHub(payload, config, token) {
   }
 
   async function putContent(sha) {
+    const publishedPayload = {
+      ...payload,
+      _meta: {
+        ...(payload._meta || {}),
+        publishedAt: new Date().toISOString(),
+        publishedSource: "web-admin"
+      }
+    };
+
     const body = {
       message: `Update schedule ${new Date().toISOString()}`,
-      content: toBase64Utf8(JSON.stringify(payload, null, 2)),
+      content: toBase64Utf8(JSON.stringify(publishedPayload, null, 2)),
       branch
     };
 
