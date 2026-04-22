@@ -55,7 +55,7 @@
     updateAdminVisibility();
 
     (async () => {
-      const saved = await loadScheduleWithFallback();
+      const saved = await loadSharedScheduleWithFallback();
       if (!saved) {
         document.getElementById("resultsContainer").innerHTML =
           "<p>Ingen lagret kampoppsett funnet. Generer kampoppsett først.</p>";

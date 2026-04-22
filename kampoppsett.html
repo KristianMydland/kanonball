@@ -22,7 +22,7 @@
     initDarkMode();
 
     (async () => {
-      const saved = await loadScheduleWithFallback();
+      const saved = await loadSharedScheduleWithFallback();
       if (!saved) {
         document.getElementById("scheduleContainer").innerHTML =
           "<p>Ingen lagret kampoppsett funnet.</p>";

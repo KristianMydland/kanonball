@@ -67,6 +67,29 @@
       Importer resultater fra fil (JSON)
     </button>
 
+    <h3>Publiser kampoppsett til GitHub</h3>
+    <label>GitHub owner</label>
+    <input id="ghOwner" type="text" placeholder="f.eks. brukernavn" class="adminOnly">
+
+    <label>GitHub repo</label>
+    <input id="ghRepo" type="text" placeholder="f.eks. Kanonball_Generator" class="adminOnly">
+
+    <label>Branch</label>
+    <input id="ghBranch" type="text" value="main" class="adminOnly">
+
+    <label>Filsti i repo</label>
+    <input id="ghPath" type="text" value="kampoppsett.json" class="adminOnly">
+
+    <label>GitHub token (kan lagres lokalt - usikkert)</label>
+    <input id="ghToken" type="password" placeholder="Fine-grained token med Contents: write" class="adminOnly">
+    <label>
+      <input id="ghRememberToken" type="checkbox" class="adminOnly"> Husk token i nettleseren (usikkert)
+    </label>
+
+    <button id="publishGitHubBtn" class="adminAction secondary">Publiser til GitHub</button>
+    <button id="clearGitHubTokenBtn" class="adminAction secondary">Slett lagret token</button>
+    <p id="publishGitHubMsg"></p>
+
     <br><br>
     <button onclick="window.open('kampoppsett.html','_blank')" class="secondary">
       Åpne lagret kampoppsett
@@ -161,6 +184,88 @@
       const html = document.getElementById("scheduleContainer").innerHTML;
       downloadHTML("kampoppsett.html", html);
     });
+
+    const ghOwnerInput = document.getElementById("ghOwner");
+    const ghRepoInput = document.getElementById("ghRepo");
+    const ghBranchInput = document.getElementById("ghBranch");
+    const ghPathInput = document.getElementById("ghPath");
+    const ghTokenInput = document.getElementById("ghToken");
+    const ghRememberTokenInput = document.getElementById("ghRememberToken");
+    const publishGitHubBtn = document.getElementById("publishGitHubBtn");
+    const clearGitHubTokenBtn = document.getElementById("clearGitHubTokenBtn");
+    const publishGitHubMsg = document.getElementById("publishGitHubMsg");
+
+    const savedGitHubPublishConfig = JSON.parse(localStorage.getItem("kanonball_github_publish_config") || "null");
+    const savedGitHubToken = localStorage.getItem("kanonball_github_publish_token") || "";
+
+    if (savedGitHubPublishConfig) {
+      ghOwnerInput.value = savedGitHubPublishConfig.owner || "";
+      ghRepoInput.value = savedGitHubPublishConfig.repo || "";
+      ghBranchInput.value = savedGitHubPublishConfig.branch || "main";
+      ghPathInput.value = savedGitHubPublishConfig.path || "kampoppsett.json";
+    }
+
+    if (savedGitHubToken) {
+      ghTokenInput.value = savedGitHubToken;
+      ghRememberTokenInput.checked = true;
+    }
+
+    publishGitHubBtn.addEventListener("click", async () => {
+      const payload = await loadScheduleWithFallback();
+      if (!payload) {
+        publishGitHubMsg.style.color = "#c00";
+        publishGitHubMsg.textContent = "Ingen kampoppsett å publisere.";
+        return;
+      }
+
+      const config = {
+        owner: ghOwnerInput.value.trim(),
+        repo: ghRepoInput.value.trim(),
+        branch: ghBranchInput.value.trim() || "main",
+        path: ghPathInput.value.trim() || "kampoppsett.json"
+      };
+
+      const token = ghTokenInput.value.trim();
+      if (!token) {
+        publishGitHubMsg.style.color = "#c00";
+        publishGitHubMsg.textContent = "Skriv inn GitHub token for publisering.";
+        return;
+      }
+
+      publishGitHubBtn.disabled = true;
+      publishGitHubMsg.style.color = "#666";
+      publishGitHubMsg.textContent = "Publiserer til GitHub...";
+
+      try {
+        await publishScheduleToGitHub(payload, config, token);
+
+        localStorage.setItem("kanonball_github_publish_config", JSON.stringify(config));
+        if (ghRememberTokenInput.checked) {
+          localStorage.setItem("kanonball_github_publish_token", token);
+        } else {
+          localStorage.removeItem("kanonball_github_publish_token");
+          ghTokenInput.value = "";
+        }
+
+        publishGitHubMsg.style.color = "green";
+        publishGitHubMsg.textContent = `Publisert til ${config.owner}/${config.repo}:${config.path}`;
+      } catch (err) {
+        publishGitHubMsg.style.color = "#c00";
+        publishGitHubMsg.textContent = err instanceof Error ? err.message : "Ukjent feil ved publisering.";
+      } finally {
+        publishGitHubBtn.disabled = false;
+        updateAdminVisibility();
+      }
+    });
+
+    clearGitHubTokenBtn.addEventListener("click", () => {
+      localStorage.removeItem("kanonball_github_publish_token");
+      ghTokenInput.value = "";
+      ghRememberTokenInput.checked = false;
+      publishGitHubMsg.style.color = "#666";
+      publishGitHubMsg.textContent = "Lagret GitHub-token slettet.";
+    });
+
   // Hash for passordet KB2026
   const DEFAULT_HASH = "-7c4b0527";
 

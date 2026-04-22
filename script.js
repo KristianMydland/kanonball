@@ -10,6 +10,13 @@ const teamColors = [
 let matchResults = {};
 let lastSchedule = null;
 
+const defaultPublishedScheduleSource = {
+  owner: "KristianMydland",
+  repo: "kanonball",
+  branch: "main",
+  path: "kampoppsett.json"
+};
+
 // ----------------------------
 // LOCALSTORAGE
 // ----------------------------
@@ -124,6 +131,50 @@ function isValidSchedulePayload(data) {
   return !!data && Array.isArray(data.schedule) && Array.isArray(data.teams);
 }
 
+function getPublishedScheduleSource() {
+  const saved = localStorage.getItem("kanonball_github_publish_config");
+  if (!saved) return defaultPublishedScheduleSource;
+
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      owner: parsed.owner || defaultPublishedScheduleSource.owner,
+      repo: parsed.repo || defaultPublishedScheduleSource.repo,
+      branch: parsed.branch || defaultPublishedScheduleSource.branch,
+      path: parsed.path || defaultPublishedScheduleSource.path
+    };
+  } catch (err) {
+    return defaultPublishedScheduleSource;
+  }
+}
+
+function buildGitHubRawUrl(config) {
+  const owner = encodeURIComponent((config.owner || "").trim());
+  const repo = encodeURIComponent((config.repo || "").trim());
+  const branch = encodeURIComponent((config.branch || "main").trim());
+  const path = (config.path || "kampoppsett.json")
+    .split("/")
+    .filter(Boolean)
+    .map(part => encodeURIComponent(part))
+    .join("/");
+
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+}
+
+async function loadPublishedSchedule() {
+  const source = getPublishedScheduleSource();
+
+  try {
+    const response = await fetch(buildGitHubRawUrl(source), { cache: "no-store" });
+    if (!response.ok) return null;
+
+    const payload = await response.json();
+    return isValidSchedulePayload(payload) ? payload : null;
+  } catch (err) {
+    return null;
+  }
+}
+
 async function loadScheduleWithFallback() {
   const cached = loadSchedule();
   if (isValidSchedulePayload(cached)) return cached;
@@ -140,6 +191,105 @@ async function loadScheduleWithFallback() {
   } catch (err) {
     return null;
   }
+}
+
+async function loadSharedScheduleWithFallback() {
+  const published = await loadPublishedSchedule();
+  if (isValidSchedulePayload(published)) return published;
+
+  const fromFile = await (async () => {
+    try {
+      const response = await fetch("kampoppsett.json", { cache: "no-store" });
+      if (!response.ok) return null;
+
+      const payload = await response.json();
+      return isValidSchedulePayload(payload) ? payload : null;
+    } catch (err) {
+      return null;
+    }
+  })();
+
+  if (isValidSchedulePayload(fromFile)) return fromFile;
+
+  const cached = loadSchedule();
+  return isValidSchedulePayload(cached) ? cached : null;
+}
+
+function toBase64Utf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  bytes.forEach(b => {
+    binary += String.fromCharCode(b);
+  });
+  return btoa(binary);
+}
+
+function normalizeGitHubPath(path) {
+  return path
+    .split("/")
+    .filter(Boolean)
+    .map(part => encodeURIComponent(part))
+    .join("/");
+}
+
+async function publishScheduleToGitHub(payload, config, token) {
+  const owner = (config.owner || "").trim();
+  const repo = (config.repo || "").trim();
+  const branch = (config.branch || "main").trim();
+  const path = (config.path || "kampoppsett.json").trim();
+
+  if (!owner || !repo || !path || !token) {
+    throw new Error("Mangler GitHub-innstillinger eller token.");
+  }
+
+  const encodedPath = normalizeGitHubPath(path);
+  const baseUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}`;
+  const headers = {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json"
+  };
+
+  let sha;
+  try {
+    const getResp = await fetch(`${baseUrl}?ref=${encodeURIComponent(branch)}`, {
+      method: "GET",
+      headers
+    });
+
+    if (getResp.ok) {
+      const existing = await getResp.json();
+      sha = existing.sha;
+    } else if (getResp.status !== 404) {
+      const getErr = await getResp.json().catch(() => ({}));
+      throw new Error(getErr.message || "Kunne ikke hente eksisterende GitHub-fil.");
+    }
+  } catch (err) {
+    if (err instanceof Error) throw err;
+    throw new Error("Feil ved kommunikasjon med GitHub.");
+  }
+
+  const content = toBase64Utf8(JSON.stringify(payload, null, 2));
+  const body = {
+    message: `Update schedule ${new Date().toISOString()}`,
+    content,
+    branch
+  };
+
+  if (sha) body.sha = sha;
+
+  const putResp = await fetch(baseUrl, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body)
+  });
+
+  if (!putResp.ok) {
+    const putErr = await putResp.json().catch(() => ({}));
+    throw new Error(putErr.message || "Kunne ikke publisere til GitHub.");
+  }
+
+  return putResp.json();
 }
 
 // ----------------------------
