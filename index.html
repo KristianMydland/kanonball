@@ -115,6 +115,7 @@
   <div class="results">
     <h2>Kampoppsett</h2>
     <div id="scheduleContainer"></div>
+    <div id="breakSummaryContainer"></div>
   </div>
 
   <script>
@@ -132,6 +133,7 @@
     const closePublishModalBtn = document.getElementById("closePublishModalBtn");
     const publishModalOverlay = document.getElementById("publishModalOverlay");
     const teamNamesDiv = document.getElementById("teamNames");
+    const breakSummaryContainer = document.getElementById("breakSummaryContainer");
     let teamNamesMemory = [];
 
     function adjustCounter(inputEl, delta) {
@@ -212,6 +214,54 @@
       document.getElementById("scheduleContainer").innerHTML = html;
     }
 
+    function renderLongestBreakTable(schedule, teams) {
+      const teamMatches = new Map();
+      teams.forEach(team => teamMatches.set(team, []));
+
+      schedule.forEach(slot => {
+        slot.matches.forEach(match => {
+          teamMatches.get(match.teamA)?.push({ start: slot.start, end: slot.end });
+          teamMatches.get(match.teamB)?.push({ start: slot.start, end: slot.end });
+        });
+      });
+
+      let html = "<h3>Lengste pause per lag</h3>";
+      html += "<table><thead><tr>" +
+        "<th>Lag</th><th>Lengste pause</th><th>Fra</th><th>Til</th>" +
+        "</tr></thead><tbody>";
+
+      teams.forEach(team => {
+        const matches = teamMatches.get(team) || [];
+        let longestBreak = null;
+
+        for (let i = 1; i < matches.length; i++) {
+          const prev = matches[i - 1];
+          const current = matches[i];
+          const breakMinutes = current.start - prev.end;
+
+          if (!longestBreak || breakMinutes > longestBreak.minutes) {
+            longestBreak = {
+              minutes: breakMinutes,
+              from: prev.end,
+              to: current.start
+            };
+          }
+        }
+
+        html += `
+          <tr>
+            <td>${team}</td>
+            <td>${longestBreak ? `${longestBreak.minutes} min` : "Ikke relevant"}</td>
+            <td>${longestBreak ? minutesToTimeStr(longestBreak.from) : "-"}</td>
+            <td>${longestBreak ? minutesToTimeStr(longestBreak.to) : "-"}</td>
+          </tr>
+        `;
+      });
+
+      html += "</tbody></table>";
+      breakSummaryContainer.innerHTML = html;
+    }
+
     function applyScheduleToIndex(data) {
       if (!data || !Array.isArray(data.schedule) || !Array.isArray(data.teams)) return;
 
@@ -233,6 +283,7 @@
 
       lastSchedule = { schedule, teams };
       renderScheduleTable(schedule, teams);
+      renderLongestBreakTable(schedule, teams);
     }
 
     window.handleScheduleImported = applyScheduleToIndex;
@@ -321,6 +372,7 @@
       saveSchedule(schedule, teams);
 
       renderScheduleTable(schedule, teams);
+      renderLongestBreakTable(schedule, teams);
     });
 
     document.getElementById("saveScheduleBtn").addEventListener("click", async () => {
