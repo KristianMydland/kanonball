@@ -126,20 +126,6 @@ body.dark .court-E { background: #4a4a1a; color: #fff7cc; }
   line-height: 1;
 }
 
-.live-source-banner {
-  padding: 8px 10px;
-  border: 1px solid var(--table-border);
-  border-radius: 6px;
-  background: var(--table-header-bg);
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-}
-
-#publishHistorySelect {
-  width: 100%;
-  margin-top: 6px;
-}
-
 .modal-overlay {
   position: fixed;
   inset: 0;

@@ -3,152 +3,152 @@
     {
       "round": 1,
       "start": 840,
-      "end": 847,
+      "end": 846,
       "matches": [
         {
           "court": "A",
           "teamA": "Kanonkulene",
-          "teamB": "TullBall"
+          "teamB": "Lag 7"
         },
         {
           "court": "B",
           "teamA": "Lova-lynene",
-          "teamB": "Bykle IL"
+          "teamB": "Lova-torden"
         }
       ]
     },
     {
       "round": 1,
-      "start": 851,
-      "end": 858,
+      "start": 848,
+      "end": 854,
       "matches": [
         {
           "court": "A",
-          "teamA": "Krossen skole",
-          "teamB": "Lauvåsen IF"
+          "teamA": "Bykle",
+          "teamB": "Lauvåsen"
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "start": 857,
+      "end": 863,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "Lag 7"
+        },
+        {
+          "court": "B",
+          "teamA": "Kanonkulene",
+          "teamB": "Lauvåsen"
         }
       ]
     },
     {
       "round": 2,
       "start": 865,
-      "end": 872,
-      "matches": [
-        {
-          "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "TullBall"
-        },
-        {
-          "court": "B",
-          "teamA": "Kanonkulene",
-          "teamB": "Lauvåsen IF"
-        }
-      ]
-    },
-    {
-      "round": 2,
-      "start": 876,
-      "end": 883,
+      "end": 871,
       "matches": [
         {
           "court": "A",
           "teamA": "Lova-lynene",
-          "teamB": "Krossen skole"
+          "teamB": "Bykle"
         }
       ]
     },
     {
       "round": 3,
-      "start": 890,
+      "start": 874,
+      "end": 880,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "Lova-torden"
+        },
+        {
+          "court": "B",
+          "teamA": "Lag 7",
+          "teamB": "Lauvåsen"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "start": 882,
+      "end": 888,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Kanonkulene",
+          "teamB": "Lova-lynene"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "start": 891,
       "end": 897,
       "matches": [
         {
           "court": "A",
           "teamA": "Randesund Power",
-          "teamB": "Bykle IL"
+          "teamB": "Lauvåsen"
         },
         {
           "court": "B",
-          "teamA": "TullBall",
-          "teamB": "Lauvåsen IF"
-        }
-      ]
-    },
-    {
-      "round": 3,
-      "start": 901,
-      "end": 908,
-      "matches": [
-        {
-          "court": "A",
-          "teamA": "Kanonkulene",
-          "teamB": "Lova-lynene"
+          "teamA": "Lova-torden",
+          "teamB": "Bykle"
         }
       ]
     },
     {
       "round": 4,
-      "start": 915,
+      "start": 899,
+      "end": 905,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Lag 7",
+          "teamB": "Lova-lynene"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "start": 908,
+      "end": 914,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Randesund Power",
+          "teamB": "Bykle"
+        },
+        {
+          "court": "B",
+          "teamA": "Lauvåsen",
+          "teamB": "Lova-lynene"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "start": 916,
       "end": 922,
       "matches": [
         {
           "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "Lauvåsen IF"
-        },
-        {
-          "court": "B",
-          "teamA": "Bykle IL",
-          "teamB": "Krossen skole"
-        }
-      ]
-    },
-    {
-      "round": 4,
-      "start": 926,
-      "end": 933,
-      "matches": [
-        {
-          "court": "A",
-          "teamA": "TullBall",
-          "teamB": "Lova-lynene"
-        }
-      ]
-    },
-    {
-      "round": 5,
-      "start": 940,
-      "end": 947,
-      "matches": [
-        {
-          "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "Krossen skole"
-        },
-        {
-          "court": "B",
-          "teamA": "Lauvåsen IF",
-          "teamB": "Lova-lynene"
-        }
-      ]
-    },
-    {
-      "round": 5,
-      "start": 951,
-      "end": 958,
-      "matches": [
-        {
-          "court": "A",
-          "teamA": "Bykle IL",
+          "teamA": "Lova-torden",
           "teamB": "Kanonkulene"
         }
       ]
     },
     {
       "round": 6,
-      "start": 965,
-      "end": 972,
+      "start": 925,
+      "end": 931,
       "matches": [
         {
           "court": "A",
@@ -157,27 +157,27 @@
         },
         {
           "court": "B",
-          "teamA": "Krossen skole",
+          "teamA": "Bykle",
           "teamB": "Kanonkulene"
         }
       ]
     },
     {
       "round": 6,
-      "start": 976,
-      "end": 983,
+      "start": 933,
+      "end": 939,
       "matches": [
         {
           "court": "A",
-          "teamA": "Bykle IL",
-          "teamB": "TullBall"
+          "teamA": "Lova-torden",
+          "teamB": "Lag 7"
         }
       ]
     },
     {
       "round": 7,
-      "start": 990,
-      "end": 997,
+      "start": 942,
+      "end": 948,
       "matches": [
         {
           "court": "A",
@@ -186,20 +186,20 @@
         },
         {
           "court": "B",
-          "teamA": "Krossen skole",
-          "teamB": "TullBall"
+          "teamA": "Bykle",
+          "teamB": "Lag 7"
         }
       ]
     },
     {
       "round": 7,
-      "start": 1001,
-      "end": 1008,
+      "start": 950,
+      "end": 956,
       "matches": [
         {
           "court": "A",
-          "teamA": "Lauvåsen IF",
-          "teamB": "Bykle IL"
+          "teamA": "Lauvåsen",
+          "teamB": "Lova-torden"
         }
       ]
     }
@@ -208,9 +208,9 @@
     "Randesund Power",
     "Kanonkulene",
     "Lova-lynene",
-    "Krossen skole",
-    "Lauvåsen IF",
-    "Bykle IL",
-    "TullBall"
+    "Bykle",
+    "Lauvåsen",
+    "Lova-torden",
+    "Lag 7"
   ]
 }

@@ -26,12 +26,9 @@
 
   <div class="results">
     <h2>Kampresultater</h2>
-    <div id="liveSourceBanner" class="live-source-banner" style="display:none;"></div>
     <div id="resultsContainer"></div>
 
     <button id="saveResultsBtn" class="adminAction secondary">Lagre resultater til fil (JSON)</button>
-    <button id="saveResultsGitHubBtn" class="adminAction secondary">Lagre resultater til GitHub</button>
-    <p id="saveResultsGitHubMsg"></p>
 
     <button onclick="importResultsFromFile()" class="adminAction secondary">
       Importer resultater fra fil (JSON)
@@ -61,12 +58,11 @@
 
   <script>
     initDarkMode();
+    loadResults();
     initAdminLogin();
     updateAdminVisibility();
 
     (async () => {
-      await loadSharedResultsWithFallback();
-
       const saved = await loadSharedScheduleWithFallback();
       if (!saved) {
         document.getElementById("resultsContainer").innerHTML =
@@ -76,7 +72,6 @@
 
       const { schedule, teams } = saved;
       lastSchedule = { schedule, teams };
-      renderLiveSourceBanner("liveSourceBanner");
 
       let html = `
         <table>
@@ -154,48 +149,6 @@
 
     document.getElementById("saveResultsBtn").addEventListener("click", () => {
       downloadJSON("resultater.json", matchResults);
-    });
-
-    document.getElementById("saveResultsGitHubBtn").addEventListener("click", async () => {
-      if (!isAdmin()) return;
-
-      const msgEl = document.getElementById("saveResultsGitHubMsg");
-      const btn = document.getElementById("saveResultsGitHubBtn");
-
-      const sourceCfg = getPublishedScheduleSource();
-      const config = {
-        owner: sourceCfg.owner,
-        repo: sourceCfg.repo,
-        branch: sourceCfg.branch,
-        path: buildSiblingPath(sourceCfg.path, "resultater.json")
-      };
-
-      let token = localStorage.getItem("kanonball_github_publish_token") || "";
-      if (!token) {
-        token = (prompt("Skriv inn GitHub token for å publisere resultater:") || "").trim();
-      }
-
-      if (!token) {
-        msgEl.style.color = "#c00";
-        msgEl.textContent = "Mangler GitHub token.";
-        return;
-      }
-
-      btn.disabled = true;
-      msgEl.style.color = "#666";
-      msgEl.textContent = "Publiserer resultater til GitHub...";
-
-      try {
-        await publishScheduleToGitHub(matchResults, config, token);
-        msgEl.style.color = "green";
-        msgEl.textContent = `Resultater publisert til ${config.owner}/${config.repo}:${config.path}`;
-      } catch (err) {
-        msgEl.style.color = "#c00";
-        msgEl.textContent = err instanceof Error ? err.message : "Ukjent feil ved publisering av resultater.";
-      } finally {
-        btn.disabled = false;
-        updateAdminVisibility();
-      }
     });
 
     document.getElementById("resetAllBtn").addEventListener("click", () => {

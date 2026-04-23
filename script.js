@@ -9,11 +9,6 @@ const teamColors = [
 
 let matchResults = {};
 let lastSchedule = null;
-let lastScheduleSourceMeta = {
-  source: "unknown",
-  fetchedAt: null,
-  publishedAt: null
-};
 
 const defaultPublishedScheduleSource = {
   owner: "KristianMydland",
@@ -147,64 +142,6 @@ function loadResults() {
   }
 }
 
-function isValidResultsPayload(data) {
-  return !!data && typeof data === "object" && !Array.isArray(data);
-}
-
-function buildSiblingPath(path, fileName) {
-  const parts = (path || "").split("/").filter(Boolean);
-  if (parts.length === 0) return fileName;
-  parts[parts.length - 1] = fileName;
-  return parts.join("/");
-}
-
-async function loadPublishedResults() {
-  const source = getPublishedScheduleSource();
-  const resultsPath = buildSiblingPath(source.path, "resultater.json");
-  const resultsSource = {
-    owner: source.owner,
-    repo: source.repo,
-    branch: source.branch,
-    path: resultsPath
-  };
-
-  try {
-    const response = await fetch(buildGitHubRawUrl(resultsSource), { cache: "no-store" });
-    if (!response.ok) return null;
-
-    const payload = await response.json();
-    if (!isValidResultsPayload(payload)) return null;
-
-    matchResults = payload;
-    saveResults();
-    return payload;
-  } catch (err) {
-    return null;
-  }
-}
-
-async function loadSharedResultsWithFallback() {
-  const published = await loadPublishedResults();
-  if (isValidResultsPayload(published)) return published;
-
-  try {
-    const response = await fetch("resultater.json", { cache: "no-store" });
-    if (response.ok) {
-      const payload = await response.json();
-      if (isValidResultsPayload(payload)) {
-        matchResults = payload;
-        saveResults();
-        return payload;
-      }
-    }
-  } catch (err) {
-    // fall through to local cache
-  }
-
-  loadResults();
-  return isValidResultsPayload(matchResults) ? matchResults : {};
-}
-
 function saveSchedule(schedule, teams) {
   localStorage.setItem("kanonball_schedule", JSON.stringify({ schedule, teams }));
 }
@@ -223,46 +160,6 @@ function loadSchedule() {
 
 function isValidSchedulePayload(data) {
   return !!data && Array.isArray(data.schedule) && Array.isArray(data.teams);
-}
-
-function setLastScheduleSourceMeta(source, payload) {
-  lastScheduleSourceMeta = {
-    source,
-    fetchedAt: new Date().toISOString(),
-    publishedAt: payload?._meta?.publishedAt || null
-  };
-}
-
-function getLastScheduleSourceMeta() {
-  return lastScheduleSourceMeta;
-}
-
-function formatTimeFromIso(iso) {
-  if (!iso) return "ukjent";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "ukjent";
-  return d.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" });
-}
-
-function renderLiveSourceBanner(targetId) {
-  const el = document.getElementById(targetId);
-  if (!el) return;
-
-  const meta = getLastScheduleSourceMeta();
-  if (meta.source === "unknown") {
-    el.style.display = "none";
-    return;
-  }
-
-  const sourceText = meta.source === "github"
-    ? "Live versjon fra GitHub"
-    : meta.source === "file"
-      ? "Lokal filversjon"
-      : "Lokal cacheversjon";
-
-  const timeText = formatTimeFromIso(meta.publishedAt || meta.fetchedAt);
-  el.textContent = `${sourceText} • sist oppdatert kl. ${timeText}`;
-  el.style.display = "block";
 }
 
 function getPublishedScheduleSource() {
@@ -303,9 +200,7 @@ async function loadPublishedSchedule() {
     if (!response.ok) return null;
 
     const payload = await response.json();
-    if (!isValidSchedulePayload(payload)) return null;
-    setLastScheduleSourceMeta("github", payload);
-    return payload;
+    return isValidSchedulePayload(payload) ? payload : null;
   } catch (err) {
     return null;
   }
@@ -313,10 +208,7 @@ async function loadPublishedSchedule() {
 
 async function loadScheduleWithFallback() {
   const cached = loadSchedule();
-  if (isValidSchedulePayload(cached)) {
-    setLastScheduleSourceMeta("cache", cached);
-    return cached;
-  }
+  if (isValidSchedulePayload(cached)) return cached;
 
   try {
     const response = await fetch("kampoppsett.json", { cache: "no-store" });
@@ -326,7 +218,6 @@ async function loadScheduleWithFallback() {
     if (!isValidSchedulePayload(fromFile)) return null;
 
     saveSchedule(fromFile.schedule, fromFile.teams);
-    setLastScheduleSourceMeta("file", fromFile);
     return fromFile;
   } catch (err) {
     return null;
@@ -343,9 +234,7 @@ async function loadSharedScheduleWithFallback() {
       if (!response.ok) return null;
 
       const payload = await response.json();
-      if (!isValidSchedulePayload(payload)) return null;
-      setLastScheduleSourceMeta("file", payload);
-      return payload;
+      return isValidSchedulePayload(payload) ? payload : null;
     } catch (err) {
       return null;
     }
@@ -354,12 +243,7 @@ async function loadSharedScheduleWithFallback() {
   if (isValidSchedulePayload(fromFile)) return fromFile;
 
   const cached = loadSchedule();
-  if (isValidSchedulePayload(cached)) {
-    setLastScheduleSourceMeta("cache", cached);
-    return cached;
-  }
-
-  return null;
+  return isValidSchedulePayload(cached) ? cached : null;
 }
 
 function toBase64Utf8(str) {
@@ -421,18 +305,9 @@ async function publishScheduleToGitHub(payload, config, token) {
   }
 
   async function putContent(sha) {
-    const publishedPayload = {
-      ...payload,
-      _meta: {
-        ...(payload._meta || {}),
-        publishedAt: new Date().toISOString(),
-        publishedSource: "web-admin"
-      }
-    };
-
     const body = {
       message: `Update schedule ${new Date().toISOString()}`,
-      content: toBase64Utf8(JSON.stringify(publishedPayload, null, 2)),
+      content: toBase64Utf8(JSON.stringify(payload, null, 2)),
       branch
     };
 
@@ -509,40 +384,132 @@ function generateRoundRobin(teams) {
 // ----------------------------
 // ANTI BACK-TO-BACK + SCHEDULE
 // ----------------------------
+function getRestStats(match, teamLastPlayedSlot, currentSlotIndex) {
+  const [teamA, teamB] = match;
+  const lastA = teamLastPlayedSlot.get(teamA);
+  const lastB = teamLastPlayedSlot.get(teamB);
+
+  const restA = lastA === undefined ? Number.MAX_SAFE_INTEGER : currentSlotIndex - lastA - 1;
+  const restB = lastB === undefined ? Number.MAX_SAFE_INTEGER : currentSlotIndex - lastB - 1;
+
+  return {
+    minRest: Math.min(restA, restB),
+    totalRest: restA + restB,
+    maxRest: Math.max(restA, restB)
+  };
+}
+
+function compareMatchesByRest(matchA, matchB, teamLastPlayedSlot, currentSlotIndex) {
+  const statsA = getRestStats(matchA, teamLastPlayedSlot, currentSlotIndex);
+  const statsB = getRestStats(matchB, teamLastPlayedSlot, currentSlotIndex);
+
+  if (statsA.minRest !== statsB.minRest) return statsB.minRest - statsA.minRest;
+  if (statsA.totalRest !== statsB.totalRest) return statsB.totalRest - statsA.totalRest;
+  if (statsA.maxRest !== statsB.maxRest) return statsB.maxRest - statsA.maxRest;
+
+  const keyA = `${matchA[0]}|${matchA[1]}`;
+  const keyB = `${matchB[0]}|${matchB[1]}`;
+  return keyA.localeCompare(keyB);
+}
+
+function getCourtLabel(index) {
+  return index < 26 ? String.fromCharCode(65 + index) : String(index + 1);
+}
+
+function getTeamCourtMap(teamCourtCounts, team) {
+  if (!teamCourtCounts.has(team)) {
+    teamCourtCounts.set(team, new Map());
+  }
+
+  return teamCourtCounts.get(team);
+}
+
+function getTeamCourtCount(teamCourtCounts, team, court) {
+  return getTeamCourtMap(teamCourtCounts, team).get(court) || 0;
+}
+
+function incrementTeamCourtCount(teamCourtCounts, team, court) {
+  const teamMap = getTeamCourtMap(teamCourtCounts, team);
+  teamMap.set(court, (teamMap.get(court) || 0) + 1);
+}
+
+function compareMatchesByCourtPressure(matchA, matchB, teamCourtCounts) {
+  const totalA = Array.from(getTeamCourtMap(teamCourtCounts, matchA[0]).values()).reduce((sum, count) => sum + count, 0)
+    + Array.from(getTeamCourtMap(teamCourtCounts, matchA[1]).values()).reduce((sum, count) => sum + count, 0);
+  const totalB = Array.from(getTeamCourtMap(teamCourtCounts, matchB[0]).values()).reduce((sum, count) => sum + count, 0)
+    + Array.from(getTeamCourtMap(teamCourtCounts, matchB[1]).values()).reduce((sum, count) => sum + count, 0);
+
+  if (totalA !== totalB) return totalB - totalA;
+
+  const keyA = `${matchA[0]}|${matchA[1]}`;
+  const keyB = `${matchB[0]}|${matchB[1]}`;
+  return keyA.localeCompare(keyB);
+}
+
+function assignCourtsFairly(slotMatches, numCourts, teamCourtCounts) {
+  const availableCourts = Array.from(
+    { length: Math.min(numCourts, slotMatches.length) },
+    (_, idx) => getCourtLabel(idx)
+  );
+  const assignments = [];
+  const orderedMatches = [...slotMatches].sort((a, b) => compareMatchesByCourtPressure(a, b, teamCourtCounts));
+
+  orderedMatches.forEach(match => {
+    let bestCourt = availableCourts[0];
+    let bestScore = null;
+
+    availableCourts.forEach(court => {
+      const countA = getTeamCourtCount(teamCourtCounts, match[0], court);
+      const countB = getTeamCourtCount(teamCourtCounts, match[1], court);
+      const score = {
+        total: countA + countB,
+        max: Math.max(countA, countB),
+        min: Math.min(countA, countB)
+      };
+
+      if (
+        !bestScore ||
+        score.total < bestScore.total ||
+        (score.total === bestScore.total && score.max < bestScore.max) ||
+        (score.total === bestScore.total && score.max === bestScore.max && score.min < bestScore.min) ||
+        (score.total === bestScore.total && score.max === bestScore.max && score.min === bestScore.min && court < bestCourt)
+      ) {
+        bestCourt = court;
+        bestScore = score;
+      }
+    });
+
+    assignments.push({ court: bestCourt, match });
+    incrementTeamCourtCount(teamCourtCounts, match[0], bestCourt);
+    incrementTeamCourtCount(teamCourtCounts, match[1], bestCourt);
+
+    const courtIndex = availableCourts.indexOf(bestCourt);
+    if (courtIndex >= 0) availableCourts.splice(courtIndex, 1);
+  });
+
+  assignments.sort((a, b) => a.court.localeCompare(b.court));
+  return assignments;
+}
+
 function buildSchedule(teams, numCourts, matchMinutes, breakMinutes, startTime, breakBetweenMatches = 0) {
   const rounds = generateRoundRobin(teams);
   let t = parseTimeToMinutes(startTime);
   const schedule = [];
+  const teamLastPlayedSlot = new Map();
+  const teamCourtCounts = new Map();
 
   rounds.forEach((round, ri) => {
     let matches = round.filter(([a, b]) => a !== "BYE" && b !== "BYE");
+    const hadMatchesInRound = matches.length > 0;
 
-    for (let i = 0; i < matches.length; i += numCourts) {
-      if (i > 0) {
-        const prevTeams = new Set();
-        const prevSlot = schedule[schedule.length - 1];
-        prevSlot.matches.forEach(m => {
-          prevTeams.add(m.teamA);
-          prevTeams.add(m.teamB);
-        });
+    while (matches.length > 0) {
+      const currentSlotIndex = schedule.length;
+      const sortedMatches = [...matches].sort((matchA, matchB) =>
+        compareMatchesByRest(matchA, matchB, teamLastPlayedSlot, currentSlotIndex)
+      );
 
-        for (let j = i; j < Math.min(i + numCourts, matches.length); j++) {
-          const [a, b] = matches[j];
-          if (prevTeams.has(a) || prevTeams.has(b)) {
-            for (let k = j + 1; k < matches.length; k++) {
-              const [aa, bb] = matches[k];
-              if (!prevTeams.has(aa) && !prevTeams.has(bb)) {
-                const tmp = matches[j];
-                matches[j] = matches[k];
-                matches[k] = tmp;
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      const slotMatches = matches.slice(i, i + numCourts);
+      const slotMatches = sortedMatches.slice(0, numCourts);
+      const courtAssignments = assignCourtsFairly(slotMatches, numCourts, teamCourtCounts);
       const slot = {
         round: ri + 1,
         start: t,
@@ -550,19 +517,23 @@ function buildSchedule(teams, numCourts, matchMinutes, breakMinutes, startTime, 
         matches: []
       };
 
-      slotMatches.forEach((m, idx) => {
+      courtAssignments.forEach(({ court, match: m }) => {
         slot.matches.push({
-          court: idx < 26 ? String.fromCharCode(65 + idx) : String(idx + 1),
+          court,
           teamA: m[0],
           teamB: m[1]
         });
+
+        teamLastPlayedSlot.set(m[0], currentSlotIndex);
+        teamLastPlayedSlot.set(m[1], currentSlotIndex);
       });
 
       schedule.push(slot);
+      matches = matches.filter(match => !slotMatches.includes(match));
       t += matchMinutes + breakBetweenMatches;
     }
 
-    if (matches.length > 0) t += breakMinutes;
+    if (hadMatchesInRound) t += breakMinutes;
   });
 
   return { schedule, totalMinutes: t - parseTimeToMinutes(startTime) };
