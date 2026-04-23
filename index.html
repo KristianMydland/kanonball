@@ -114,6 +114,7 @@
 
   <div class="results">
     <h2>Kampoppsett</h2>
+    <p id="scheduleSourceStatus"></p>
     <div id="scheduleContainer"></div>
     <div id="breakSummaryContainer"></div>
   </div>
@@ -225,9 +226,9 @@
         });
       });
 
-      let html = "<h3>Lengste pause per lag</h3>";
+      let html = "<h3>Første og siste kamp + lengste pause per lag</h3>";
       html += "<table><thead><tr>" +
-        "<th>Lag</th><th>Lengste pause</th><th>Fra</th><th>Til</th>" +
+        "<th>Lag</th><th>Første kamp</th><th>Siste kamp</th><th>Lengste pause</th><th>Fra</th><th>Til</th>" +
         "</tr></thead><tbody>";
 
       teams.forEach(team => {
@@ -248,9 +249,14 @@
           }
         }
 
+        const firstMatch = matches.length > 0 ? minutesToTimeStr(matches[0].start) : "-";
+        const lastMatch = matches.length > 0 ? minutesToTimeStr(matches[matches.length - 1].start) : "-";
+
         html += `
           <tr>
             <td>${team}</td>
+            <td>${firstMatch}</td>
+            <td>${lastMatch}</td>
             <td>${longestBreak ? `${longestBreak.minutes} min` : "Ikke relevant"}</td>
             <td>${longestBreak ? minutesToTimeStr(longestBreak.from) : "-"}</td>
             <td>${longestBreak ? minutesToTimeStr(longestBreak.to) : "-"}</td>
@@ -281,7 +287,9 @@
         if (input) input.value = teamName;
       });
 
-      lastSchedule = { schedule, teams };
+      const savedAt = getScheduleSavedAt(data) || new Date().toISOString();
+      const revision = getPayloadRevision(data);
+      lastSchedule = { schedule, teams, savedAt, revision };
       renderScheduleTable(schedule, teams);
       renderLongestBreakTable(schedule, teams);
     }
@@ -347,8 +355,20 @@
 
     renderTeamInputs();
 
-    loadScheduleWithFallback().then(saved => {
-      if (saved) applyScheduleToIndex(saved);
+    const scheduleSourceStatusEl = document.getElementById("scheduleSourceStatus");
+
+    function updateScheduleSourceStatus(payload, source) {
+      if (!scheduleSourceStatusEl) return;
+      const sourceLabel = { github: "GitHub", "local-file": "lokal fil", "local-cache": "lokal cache" }[source] || (source || "lokal");
+      scheduleSourceStatusEl.textContent =
+        `Kilde: ${sourceLabel} | Lagret: ${formatSavedAt(payload?.savedAt)} | Revisjon: ${formatRevision(getPayloadRevision(payload))}`;
+    }
+
+    loadSharedScheduleWithSource().then(loaded => {
+      if (loaded) {
+        applyScheduleToIndex(loaded.payload);
+        updateScheduleSourceStatus(loaded.payload, loaded.source);
+      }
     });
 
     document.getElementById("generateBtn").addEventListener("click", () => {
@@ -368,8 +388,11 @@
         teams, numCourts, matchMinutes, breakMinutes, startTime, breakBetweenMatches
       );
 
-      lastSchedule = { schedule, teams };
-      saveSchedule(schedule, teams);
+      const savedAt = new Date().toISOString();
+      const revision = getPayloadRevision(lastSchedule);
+      lastSchedule = { schedule, teams, savedAt, revision };
+      saveSchedule(schedule, teams, savedAt, revision);
+      updateScheduleSourceStatus(lastSchedule, "lokal cache");
 
       renderScheduleTable(schedule, teams);
       renderLongestBreakTable(schedule, teams);
@@ -420,6 +443,18 @@
         return;
       }
 
+      const payloadToPublish = createSchedulePayloadWithRevision(
+        payload.schedule,
+        payload.teams,
+        getScheduleSavedAt(payload),
+        getPayloadRevision(payload)
+      );
+      saveSchedule(
+        payloadToPublish.schedule,
+        payloadToPublish.teams,
+        payloadToPublish.savedAt,
+        payloadToPublish.revision
+      );
       const config = {
         owner: ghOwnerInput.value.trim(),
         repo: ghRepoInput.value.trim(),
@@ -439,7 +474,16 @@
       publishGitHubMsg.textContent = "Publiserer til GitHub...";
 
       try {
-        await publishScheduleToGitHub(payload, config, token);
+        const publishResponse = await publishScheduleToGitHub(payloadToPublish, config, token);
+        const revision = publishResponse?.content?.sha || getPayloadRevision(payloadToPublish);
+        saveSchedule(payloadToPublish.schedule, payloadToPublish.teams, payloadToPublish.savedAt, revision);
+        lastSchedule = {
+          schedule: payloadToPublish.schedule,
+          teams: payloadToPublish.teams,
+          savedAt: payloadToPublish.savedAt,
+          revision
+        };
+        updateScheduleSourceStatus(lastSchedule, "github");
 
         localStorage.setItem("kanonball_github_publish_config", JSON.stringify(config));
         if (ghRememberTokenInput.checked) {
@@ -450,7 +494,8 @@
         }
 
         publishGitHubMsg.style.color = "green";
-        publishGitHubMsg.textContent = `Publisert til ${config.owner}/${config.repo}:${config.path}`;
+        publishGitHubMsg.textContent =
+          `Publisert til ${config.owner}/${config.repo}:${config.path} (rev ${formatRevision(revision)})`;
       } catch (err) {
         publishGitHubMsg.style.color = "#c00";
         publishGitHubMsg.textContent = err instanceof Error ? err.message : "Ukjent feil ved publisering.";

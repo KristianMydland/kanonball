@@ -26,9 +26,12 @@
 
   <div class="results">
     <h2>Kampresultater</h2>
+    <p id="scheduleSourceStatus"></p>
+    <p id="resultsSourceStatus"></p>
     <div id="resultsContainer"></div>
 
     <button id="saveResultsBtn" class="adminAction secondary">Lagre resultater til fil (JSON)</button>
+    <button id="openPublishResultsModalBtn" class="adminAction secondary">Publiser resultater til GitHub</button>
 
     <button onclick="importResultsFromFile()" class="adminAction secondary">
       Importer resultater fra fil (JSON)
@@ -41,6 +44,37 @@
     <button id="resetAllBtn" class="adminAction secondary" style="background:#ffdddd; color:#900;">
       Nullstill ALLE resultater
     </button>
+  </div>
+
+  <div id="publishResultsModalOverlay" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header-row">
+        <h3>Publiser resultater til GitHub</h3>
+        <button id="closePublishResultsModalBtn" type="button" class="secondary">Lukk</button>
+      </div>
+
+      <label>GitHub owner</label>
+      <input id="ghResultsOwner" type="text" placeholder="f.eks. brukernavn" class="adminOnly">
+
+      <label>GitHub repo</label>
+      <input id="ghResultsRepo" type="text" placeholder="f.eks. kanonball" class="adminOnly">
+
+      <label>Branch</label>
+      <input id="ghResultsBranch" type="text" value="main" class="adminOnly">
+
+      <label>Filsti i repo</label>
+      <input id="ghResultsPath" type="text" value="resultater.json" class="adminOnly">
+
+      <label>GitHub token (kan lagres lokalt - usikkert)</label>
+      <input id="ghResultsToken" type="password" placeholder="Fine-grained token med Contents: write" class="adminOnly">
+      <label>
+        <input id="ghResultsRememberToken" type="checkbox" class="adminOnly"> Husk token i nettleseren (usikkert)
+      </label>
+
+      <button id="publishResultsGitHubBtn" class="adminAction secondary">Publiser resultater til GitHub</button>
+      <button id="clearResultsGitHubTokenBtn" class="adminAction secondary">Slett lagret token</button>
+      <p id="publishResultsGitHubMsg"></p>
+    </div>
   </div>
 
   <div class="results">
@@ -58,19 +92,47 @@
 
   <script>
     initDarkMode();
-    loadResults();
+    let latestResultsPayload = loadResults();
     initAdminLogin();
     updateAdminVisibility();
 
+    const sourceLabelMap = {
+      github: "GitHub",
+      "local-file": "lokal fil",
+      "local-cache": "lokal cache"
+    };
+
+    const scheduleSourceStatusEl = document.getElementById("scheduleSourceStatus");
+    const resultsSourceStatusEl = document.getElementById("resultsSourceStatus");
+
     (async () => {
-      const saved = await loadSharedScheduleWithFallback();
-      if (!saved) {
+      const scheduleLoaded = await loadSharedScheduleWithSource();
+      if (!scheduleLoaded) {
+        scheduleSourceStatusEl.textContent = "Kampoppsett-kilde: ingen data";
         document.getElementById("resultsContainer").innerHTML =
           "<p>Ingen lagret kampoppsett funnet. Generer kampoppsett først.</p>";
         return;
       }
 
-      const { schedule, teams } = saved;
+      scheduleSourceStatusEl.textContent =
+        `Kampoppsett-kilde: ${sourceLabelMap[scheduleLoaded.source] || scheduleLoaded.source} | ` +
+        `Lagret: ${formatSavedAt(scheduleLoaded.payload?.savedAt)} | ` +
+        `Revisjon: ${formatRevision(getPayloadRevision(scheduleLoaded.payload))}`;
+
+      const resultsLoaded = await loadResultsWithSource();
+      if (resultsLoaded) {
+        latestResultsPayload = resultsLoaded.payload;
+        resultsSourceStatusEl.textContent =
+          `Resultat-kilde: ${sourceLabelMap[resultsLoaded.source] || resultsLoaded.source} | ` +
+          `Lagret: ${formatSavedAt(resultsLoaded.payload?.savedAt)} | ` +
+          `Revisjon: ${formatRevision(getPayloadRevision(resultsLoaded.payload))}`;
+      } else {
+        latestResultsPayload = createResultsPayload(matchResults, null, null);
+        resultsSourceStatusEl.textContent =
+          "Resultat-kilde: ingen data ennå (bruk lokal cache)";
+      }
+
+      const { schedule, teams } = scheduleLoaded.payload;
       lastSchedule = { schedule, teams };
 
       let html = `
@@ -104,7 +166,7 @@
               <td>${m.teamB}</td>
               <td>
                 <select class="score-input adminOnly" id="RES_${id}">
-                  <option value="">–</option>
+                  <option value="">-</option>
                   <option value="A" ${r.scoreA == 2 ? "selected" : ""}>${m.teamA} vinner</option>
                   <option value="D" ${r.scoreA == 1 ? "selected" : ""}>Uavgjort</option>
                   <option value="B" ${r.scoreB == 2 ? "selected" : ""}>${m.teamB} vinner</option>
@@ -119,8 +181,7 @@
 
       html += "</tbody></table>";
       document.getElementById("resultsContainer").innerHTML = html;
-      
-      // Apply admin restrictions to score inputs
+
       updateAdminVisibility();
 
       document.addEventListener("input", e => {
@@ -130,13 +191,19 @@
         const id = e.target.id.replace("RES_", "");
         const value = e.target.value;
 
-        let scoreA = 0, scoreB = 0;
+        let scoreA = 0;
+        let scoreB = 0;
 
         if (value === "A") { scoreA = 2; scoreB = 0; }
         if (value === "B") { scoreA = 0; scoreB = 2; }
         if (value === "D") { scoreA = 1; scoreB = 1; }
 
         registerResult(id, scoreA, scoreB);
+        latestResultsPayload = createResultsPayload(matchResults, new Date().toISOString(), getPayloadRevision(latestResultsPayload));
+        saveResults(latestResultsPayload.savedAt, latestResultsPayload.revision);
+        resultsSourceStatusEl.textContent =
+          `Resultat-kilde: lokal cache | Lagret: ${formatSavedAt(latestResultsPayload.savedAt)} | ` +
+          `Revisjon: ${formatRevision(getPayloadRevision(latestResultsPayload))}`;
         renderStandings(teams);
       });
 
@@ -148,7 +215,113 @@
     })();
 
     document.getElementById("saveResultsBtn").addEventListener("click", () => {
-      downloadJSON("resultater.json", matchResults);
+      const payload = createResultsPayload(matchResults, new Date().toISOString(), getPayloadRevision(latestResultsPayload));
+      saveResults(payload.savedAt, payload.revision);
+      latestResultsPayload = payload;
+      resultsSourceStatusEl.textContent =
+        `Resultat-kilde: lokal cache | Lagret: ${formatSavedAt(payload.savedAt)} | ` +
+        `Revisjon: ${formatRevision(getPayloadRevision(payload))}`;
+      downloadJSON("resultater.json", payload);
+    });
+
+    const openPublishResultsModalBtn = document.getElementById("openPublishResultsModalBtn");
+    const closePublishResultsModalBtn = document.getElementById("closePublishResultsModalBtn");
+    const publishResultsModalOverlay = document.getElementById("publishResultsModalOverlay");
+    const ghResultsOwnerInput = document.getElementById("ghResultsOwner");
+    const ghResultsRepoInput = document.getElementById("ghResultsRepo");
+    const ghResultsBranchInput = document.getElementById("ghResultsBranch");
+    const ghResultsPathInput = document.getElementById("ghResultsPath");
+    const ghResultsTokenInput = document.getElementById("ghResultsToken");
+    const ghResultsRememberTokenInput = document.getElementById("ghResultsRememberToken");
+    const publishResultsGitHubBtn = document.getElementById("publishResultsGitHubBtn");
+    const clearResultsGitHubTokenBtn = document.getElementById("clearResultsGitHubTokenBtn");
+    const publishResultsGitHubMsg = document.getElementById("publishResultsGitHubMsg");
+
+    const savedResultsGitHubPublishConfig = JSON.parse(localStorage.getItem("kanonball_github_results_publish_config") || "null");
+    const savedResultsGitHubToken = localStorage.getItem("kanonball_github_results_publish_token") || "";
+
+    if (savedResultsGitHubPublishConfig) {
+      ghResultsOwnerInput.value = savedResultsGitHubPublishConfig.owner || "";
+      ghResultsRepoInput.value = savedResultsGitHubPublishConfig.repo || "";
+      ghResultsBranchInput.value = savedResultsGitHubPublishConfig.branch || "main";
+      ghResultsPathInput.value = savedResultsGitHubPublishConfig.path || "resultater.json";
+    }
+
+    if (savedResultsGitHubToken) {
+      ghResultsTokenInput.value = savedResultsGitHubToken;
+      ghResultsRememberTokenInput.checked = true;
+    }
+
+    openPublishResultsModalBtn.addEventListener("click", () => {
+      publishResultsModalOverlay.classList.add("open");
+    });
+
+    closePublishResultsModalBtn.addEventListener("click", () => {
+      publishResultsModalOverlay.classList.remove("open");
+    });
+
+    publishResultsModalOverlay.addEventListener("click", e => {
+      if (e.target === publishResultsModalOverlay) {
+        publishResultsModalOverlay.classList.remove("open");
+      }
+    });
+
+    publishResultsGitHubBtn.addEventListener("click", async () => {
+      const payload = createResultsPayload(matchResults, new Date().toISOString(), getPayloadRevision(latestResultsPayload));
+
+      const config = {
+        owner: ghResultsOwnerInput.value.trim(),
+        repo: ghResultsRepoInput.value.trim(),
+        branch: ghResultsBranchInput.value.trim() || "main",
+        path: ghResultsPathInput.value.trim() || "resultater.json"
+      };
+
+      const token = ghResultsTokenInput.value.trim();
+      if (!token) {
+        publishResultsGitHubMsg.style.color = "#c00";
+        publishResultsGitHubMsg.textContent = "Skriv inn GitHub token for publisering.";
+        return;
+      }
+
+      publishResultsGitHubBtn.disabled = true;
+      publishResultsGitHubMsg.style.color = "#666";
+      publishResultsGitHubMsg.textContent = "Publiserer resultater til GitHub...";
+
+      try {
+        const publishResponse = await publishResultsToGitHub(payload, config, token);
+        const revision = publishResponse?.content?.sha || getPayloadRevision(payload);
+
+        saveResults(payload.savedAt, revision);
+        latestResultsPayload = createResultsPayload(payload.results, payload.savedAt, revision);
+
+        resultsSourceStatusEl.textContent =
+          `Resultat-kilde: GitHub | Lagret: ${formatSavedAt(payload.savedAt)} | Revisjon: ${formatRevision(revision)}`;
+
+        localStorage.setItem("kanonball_github_results_publish_config", JSON.stringify(config));
+        if (ghResultsRememberTokenInput.checked) {
+          localStorage.setItem("kanonball_github_results_publish_token", token);
+        } else {
+          localStorage.removeItem("kanonball_github_results_publish_token");
+          ghResultsTokenInput.value = "";
+        }
+
+        publishResultsGitHubMsg.style.color = "green";
+        publishResultsGitHubMsg.textContent = `Publisert til ${config.owner}/${config.repo}:${config.path}`;
+      } catch (err) {
+        publishResultsGitHubMsg.style.color = "#c00";
+        publishResultsGitHubMsg.textContent = err instanceof Error ? err.message : "Ukjent feil ved publisering.";
+      } finally {
+        publishResultsGitHubBtn.disabled = false;
+        updateAdminVisibility();
+      }
+    });
+
+    clearResultsGitHubTokenBtn.addEventListener("click", () => {
+      localStorage.removeItem("kanonball_github_results_publish_token");
+      ghResultsTokenInput.value = "";
+      ghResultsRememberTokenInput.checked = false;
+      publishResultsGitHubMsg.style.color = "#666";
+      publishResultsGitHubMsg.textContent = "Lagret GitHub-token slettet.";
     });
 
     document.getElementById("resetAllBtn").addEventListener("click", () => {
@@ -157,7 +330,8 @@
       }
 
       matchResults = {};
-      saveResults();
+      latestResultsPayload = createResultsPayload(matchResults, new Date().toISOString(), getPayloadRevision(latestResultsPayload));
+      saveResults(latestResultsPayload.savedAt, latestResultsPayload.revision);
       alert("Alle resultater er slettet.");
       location.reload();
     });

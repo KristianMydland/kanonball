@@ -17,6 +17,13 @@ const defaultPublishedScheduleSource = {
   path: "kampoppsett.json"
 };
 
+const defaultPublishedResultsSource = {
+  owner: "KristianMydland",
+  repo: "kanonball",
+  branch: "main",
+  path: "resultater.json"
+};
+
 // ----------------------------
 // LOCALSTORAGE
 // ----------------------------
@@ -125,8 +132,72 @@ function initAdminLogin() {
   });
 }
 
-function saveResults() {
-  localStorage.setItem("kanonball_results", JSON.stringify(matchResults));
+function normalizeResultsMap(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+
+  const normalized = {};
+  Object.entries(raw).forEach(([id, value]) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return;
+
+    const scoreA = Number(value.scoreA);
+    const scoreB = Number(value.scoreB);
+    if (Number.isNaN(scoreA) || Number.isNaN(scoreB)) return;
+
+    normalized[id] = { scoreA, scoreB };
+  });
+
+  return normalized;
+}
+
+function getPayloadRevision(payload) {
+  return typeof payload?.revision === "string" && payload.revision.trim()
+    ? payload.revision.trim()
+    : null;
+}
+
+function formatRevision(revision) {
+  if (!revision) return "ukjent";
+  return revision.slice(0, 7);
+}
+
+function createResultsPayload(results, savedAt, revision) {
+  const payload = {
+    results: normalizeResultsMap(results),
+    savedAt: typeof savedAt === "string" && savedAt.trim() ? savedAt.trim() : new Date().toISOString()
+  };
+
+  const normalizedRevision = typeof revision === "string" && revision.trim() ? revision.trim() : "";
+  if (normalizedRevision) payload.revision = normalizedRevision;
+
+  return payload;
+}
+
+function normalizeResultsPayload(rawPayload) {
+  if (!rawPayload || typeof rawPayload !== "object" || Array.isArray(rawPayload)) return null;
+
+  if (rawPayload.results && typeof rawPayload.results === "object" && !Array.isArray(rawPayload.results)) {
+    return createResultsPayload(rawPayload.results, getScheduleSavedAt(rawPayload), getPayloadRevision(rawPayload));
+  }
+
+  return createResultsPayload(rawPayload, null, null);
+}
+
+function saveResults(savedAt, revision) {
+  let effectiveRevision = revision;
+  if (effectiveRevision === undefined) {
+    try {
+      const existingRaw = localStorage.getItem("kanonball_results");
+      const existingParsed = existingRaw ? JSON.parse(existingRaw) : null;
+      effectiveRevision = getPayloadRevision(normalizeResultsPayload(existingParsed));
+    } catch (err) {
+      effectiveRevision = null;
+    }
+  }
+
+  localStorage.setItem(
+    "kanonball_results",
+    JSON.stringify(createResultsPayload(matchResults, savedAt, effectiveRevision))
+  );
 }
 
 function loadResults() {
@@ -135,15 +206,68 @@ function loadResults() {
 
   try {
     const parsed = JSON.parse(saved);
-    matchResults = parsed && typeof parsed === "object" ? parsed : {};
+    const normalized = normalizeResultsPayload(parsed);
+    if (!normalized) throw new Error("Invalid result payload");
+
+    matchResults = normalized.results;
+    saveResults(normalized.savedAt, normalized.revision);
+    return normalized;
   } catch (err) {
     matchResults = {};
     localStorage.removeItem("kanonball_results");
+    return null;
   }
 }
 
-function saveSchedule(schedule, teams) {
-  localStorage.setItem("kanonball_schedule", JSON.stringify({ schedule, teams }));
+function getScheduleSavedAt(payload) {
+  return typeof payload?.savedAt === "string" && payload.savedAt.trim()
+    ? payload.savedAt.trim()
+    : null;
+}
+
+function createSchedulePayload(schedule, teams, savedAt) {
+  const payload = { schedule, teams };
+  payload.savedAt = typeof savedAt === "string" && savedAt.trim()
+    ? savedAt.trim()
+    : new Date().toISOString();
+  return payload;
+}
+
+function createSchedulePayloadWithRevision(schedule, teams, savedAt, revision) {
+  const payload = createSchedulePayload(schedule, teams, savedAt);
+  const normalizedRevision = typeof revision === "string" && revision.trim() ? revision.trim() : "";
+  if (normalizedRevision) payload.revision = normalizedRevision;
+  return payload;
+}
+
+function formatSavedAt(savedAt) {
+  if (typeof savedAt !== "string" || !savedAt.trim()) return "ukjent";
+
+  const parsed = new Date(savedAt);
+  if (Number.isNaN(parsed.getTime())) return "ukjent";
+
+  return parsed.toLocaleString("nb-NO", {
+    dateStyle: "short",
+    timeStyle: "medium"
+  });
+}
+
+function saveSchedule(schedule, teams, savedAt, revision) {
+  let effectiveRevision = revision;
+  if (effectiveRevision === undefined) {
+    try {
+      const existingRaw = localStorage.getItem("kanonball_schedule");
+      const existingParsed = existingRaw ? JSON.parse(existingRaw) : null;
+      effectiveRevision = getPayloadRevision(existingParsed);
+    } catch (err) {
+      effectiveRevision = null;
+    }
+  }
+
+  localStorage.setItem(
+    "kanonball_schedule",
+    JSON.stringify(createSchedulePayloadWithRevision(schedule, teams, savedAt, effectiveRevision))
+  );
 }
 
 function loadSchedule() {
@@ -179,6 +303,23 @@ function getPublishedScheduleSource() {
   }
 }
 
+function getPublishedResultsSource() {
+  const saved = localStorage.getItem("kanonball_github_results_publish_config");
+  if (!saved) return defaultPublishedResultsSource;
+
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      owner: parsed.owner || defaultPublishedResultsSource.owner,
+      repo: parsed.repo || defaultPublishedResultsSource.repo,
+      branch: parsed.branch || defaultPublishedResultsSource.branch,
+      path: parsed.path || defaultPublishedResultsSource.path
+    };
+  } catch (err) {
+    return defaultPublishedResultsSource;
+  }
+}
+
 function buildGitHubRawUrl(config) {
   const owner = encodeURIComponent((config.owner || "").trim());
   const repo = encodeURIComponent((config.repo || "").trim());
@@ -192,15 +333,112 @@ function buildGitHubRawUrl(config) {
   return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
 }
 
+function buildGitHubContentsApiUrl(config) {
+  const owner = encodeURIComponent((config.owner || "").trim());
+  const repo = encodeURIComponent((config.repo || "").trim());
+  const branch = encodeURIComponent((config.branch || "main").trim());
+  const path = (config.path || "kampoppsett.json")
+    .split("/")
+    .filter(Boolean)
+    .map(part => encodeURIComponent(part))
+    .join("/");
+
+  return `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+}
+
+function base64ToUtf8(base64Text) {
+  const binary = atob(base64Text);
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function parseGitHubContentsPayload(payload) {
+  if (!payload || typeof payload !== "object" || typeof payload.content !== "string") {
+    return null;
+  }
+
+  try {
+    const decoded = base64ToUtf8(payload.content.replace(/\n/g, ""));
+    return JSON.parse(decoded);
+  } catch (err) {
+    return null;
+  }
+}
+
 async function loadPublishedSchedule() {
   const source = getPublishedScheduleSource();
 
   try {
-    const response = await fetch(buildGitHubRawUrl(source), { cache: "no-store" });
-    if (!response.ok) return null;
+    const apiUrl = `${buildGitHubContentsApiUrl(source)}&t=${Date.now()}`;
+    const response = await fetch(apiUrl, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/vnd.github+json"
+      }
+    });
 
-    const payload = await response.json();
-    return isValidSchedulePayload(payload) ? payload : null;
+    if (response.ok) {
+      const apiPayload = await response.json();
+      const parsedPayload = parseGitHubContentsPayload(apiPayload);
+      if (isValidSchedulePayload(parsedPayload)) {
+        return createSchedulePayloadWithRevision(
+          parsedPayload.schedule,
+          parsedPayload.teams,
+          getScheduleSavedAt(parsedPayload),
+          apiPayload.sha || getPayloadRevision(parsedPayload)
+        );
+      }
+    }
+
+    const rawUrl = `${buildGitHubRawUrl(source)}?t=${Date.now()}`;
+    const rawResponse = await fetch(rawUrl, { cache: "no-store" });
+    if (!rawResponse.ok) return null;
+
+    const rawPayload = await rawResponse.json();
+    if (!isValidSchedulePayload(rawPayload)) return null;
+
+    return createSchedulePayloadWithRevision(
+      rawPayload.schedule,
+      rawPayload.teams,
+      getScheduleSavedAt(rawPayload),
+      getPayloadRevision(rawPayload)
+    );
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadPublishedResults() {
+  const source = getPublishedResultsSource();
+
+  try {
+    const apiUrl = `${buildGitHubContentsApiUrl(source)}&t=${Date.now()}`;
+    const response = await fetch(apiUrl, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/vnd.github+json"
+      }
+    });
+
+    if (response.ok) {
+      const apiPayload = await response.json();
+      const parsedPayload = parseGitHubContentsPayload(apiPayload);
+      const normalized = normalizeResultsPayload(parsedPayload);
+      if (normalized) {
+        return createResultsPayload(
+          normalized.results,
+          normalized.savedAt,
+          apiPayload.sha || normalized.revision
+        );
+      }
+    }
+
+    const rawUrl = `${buildGitHubRawUrl(source)}?t=${Date.now()}`;
+    const rawResponse = await fetch(rawUrl, { cache: "no-store" });
+    if (!rawResponse.ok) return null;
+
+    const rawPayload = await rawResponse.json();
+    return normalizeResultsPayload(rawPayload);
   } catch (err) {
     return null;
   }
@@ -208,7 +446,16 @@ async function loadPublishedSchedule() {
 
 async function loadScheduleWithFallback() {
   const cached = loadSchedule();
-  if (isValidSchedulePayload(cached)) return cached;
+  if (isValidSchedulePayload(cached)) {
+    const normalized = createSchedulePayloadWithRevision(
+      cached.schedule,
+      cached.teams,
+      getScheduleSavedAt(cached),
+      getPayloadRevision(cached)
+    );
+    saveSchedule(normalized.schedule, normalized.teams, normalized.savedAt, normalized.revision);
+    return normalized;
+  }
 
   try {
     const response = await fetch("kampoppsett.json", { cache: "no-store" });
@@ -217,16 +464,36 @@ async function loadScheduleWithFallback() {
     const fromFile = await response.json();
     if (!isValidSchedulePayload(fromFile)) return null;
 
-    saveSchedule(fromFile.schedule, fromFile.teams);
-    return fromFile;
+    const normalized = createSchedulePayloadWithRevision(
+      fromFile.schedule,
+      fromFile.teams,
+      getScheduleSavedAt(fromFile),
+      getPayloadRevision(fromFile)
+    );
+    saveSchedule(normalized.schedule, normalized.teams, normalized.savedAt, normalized.revision);
+    return normalized;
   } catch (err) {
     return null;
   }
 }
 
 async function loadSharedScheduleWithFallback() {
+  const loaded = await loadSharedScheduleWithSource();
+  return loaded ? loaded.payload : null;
+}
+
+async function loadSharedScheduleWithSource() {
   const published = await loadPublishedSchedule();
-  if (isValidSchedulePayload(published)) return published;
+  if (isValidSchedulePayload(published)) {
+    const normalized = createSchedulePayloadWithRevision(
+      published.schedule,
+      published.teams,
+      getScheduleSavedAt(published),
+      getPayloadRevision(published)
+    );
+    saveSchedule(normalized.schedule, normalized.teams, normalized.savedAt, normalized.revision);
+    return { payload: normalized, source: "github" };
+  }
 
   const fromFile = await (async () => {
     try {
@@ -240,10 +507,62 @@ async function loadSharedScheduleWithFallback() {
     }
   })();
 
-  if (isValidSchedulePayload(fromFile)) return fromFile;
+  if (isValidSchedulePayload(fromFile)) {
+    const normalized = createSchedulePayloadWithRevision(
+      fromFile.schedule,
+      fromFile.teams,
+      getScheduleSavedAt(fromFile),
+      getPayloadRevision(fromFile)
+    );
+    saveSchedule(normalized.schedule, normalized.teams, normalized.savedAt, normalized.revision);
+    return { payload: normalized, source: "local-file" };
+  }
 
   const cached = loadSchedule();
-  return isValidSchedulePayload(cached) ? cached : null;
+  if (isValidSchedulePayload(cached)) {
+    const normalized = createSchedulePayloadWithRevision(
+      cached.schedule,
+      cached.teams,
+      getScheduleSavedAt(cached),
+      getPayloadRevision(cached)
+    );
+    saveSchedule(normalized.schedule, normalized.teams, normalized.savedAt, normalized.revision);
+    return { payload: normalized, source: "local-cache" };
+  }
+
+  return null;
+}
+
+async function loadResultsWithSource() {
+  const published = await loadPublishedResults();
+  if (published) {
+    matchResults = published.results;
+    saveResults(published.savedAt, published.revision);
+    return { payload: published, source: "github" };
+  }
+
+  try {
+    const response = await fetch("resultater.json", { cache: "no-store" });
+    if (response.ok) {
+      const rawPayload = await response.json();
+      const normalized = normalizeResultsPayload(rawPayload);
+      if (normalized) {
+        matchResults = normalized.results;
+        saveResults(normalized.savedAt, normalized.revision);
+        return { payload: normalized, source: "local-file" };
+      }
+    }
+  } catch (err) {
+    // ignore and continue to local cache fallback
+  }
+
+  const cached = loadResults();
+  if (cached) {
+    matchResults = cached.results;
+    return { payload: cached, source: "local-cache" };
+  }
+
+  return null;
 }
 
 function toBase64Utf8(str) {
@@ -263,11 +582,11 @@ function normalizeGitHubPath(path) {
     .join("/");
 }
 
-async function publishScheduleToGitHub(payload, config, token) {
+async function publishJsonToGitHub(payload, config, token, commitMessagePrefix) {
   const owner = (config.owner || "").trim();
   const repo = (config.repo || "").trim();
   const branch = (config.branch || "main").trim();
-  const path = (config.path || "kampoppsett.json").trim();
+  const path = (config.path || "").trim();
 
   if (!owner || !repo || !path || !token) {
     throw new Error("Mangler GitHub-innstillinger eller token.");
@@ -306,7 +625,7 @@ async function publishScheduleToGitHub(payload, config, token) {
 
   async function putContent(sha) {
     const body = {
-      message: `Update schedule ${new Date().toISOString()}`,
+      message: `${commitMessagePrefix} ${new Date().toISOString()}`,
       content: toBase64Utf8(JSON.stringify(payload, null, 2)),
       branch
     };
@@ -339,6 +658,14 @@ async function publishScheduleToGitHub(payload, config, token) {
   }
 
   return putResp.json();
+}
+
+async function publishScheduleToGitHub(payload, config, token) {
+  return publishJsonToGitHub(payload, config, token, "Update schedule");
+}
+
+async function publishResultsToGitHub(payload, config, token) {
+  return publishJsonToGitHub(payload, config, token, "Update results");
 }
 
 // ----------------------------
@@ -723,7 +1050,7 @@ function importScheduleFromFile() {
       return;
     }
 
-    saveSchedule(data.schedule, data.teams);
+    saveSchedule(data.schedule, data.teams, getScheduleSavedAt(data), getPayloadRevision(data));
 
     if (typeof window.handleScheduleImported === "function") {
       window.handleScheduleImported(data);
@@ -739,13 +1066,14 @@ function importScheduleFromFile() {
 // Importer resultater
 function importResultsFromFile() {
   importJSONFile(data => {
-    if (!data || typeof data !== "object" || Array.isArray(data)) {
+    const normalized = normalizeResultsPayload(data);
+    if (!normalized) {
       alert("Filen inneholder ikke gyldige resultater.");
       return;
     }
 
-    matchResults = data;
-    saveResults();
+    matchResults = normalized.results;
+    saveResults(normalized.savedAt, normalized.revision);
     alert("Resultater importert!");
     location.reload();
   });

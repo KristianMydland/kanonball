@@ -14,6 +14,7 @@
   </div>
 
   <div class="results">
+    <p id="scheduleSourceStatus"></p>
     <div id="scheduleContainer"></div>
   </div>
 
@@ -22,13 +23,27 @@
     initDarkMode();
 
     (async () => {
-      const saved = await loadSharedScheduleWithFallback();
-      if (!saved) {
+      const loaded = await loadSharedScheduleWithSource();
+      const sourceStatusEl = document.getElementById("scheduleSourceStatus");
+
+      if (!loaded) {
+        sourceStatusEl.textContent = "Kilde: ingen data";
         document.getElementById("scheduleContainer").innerHTML =
           "<p>Ingen lagret kampoppsett funnet.</p>";
         return;
       }
 
+      const sourceLabelMap = {
+        github: "GitHub",
+        "local-file": "lokal fil (kampoppsett.json)",
+        "local-cache": "lokal cache"
+      };
+      const savedAtText = formatSavedAt(loaded.payload?.savedAt);
+      const revisionText = formatRevision(getPayloadRevision(loaded.payload));
+      sourceStatusEl.textContent =
+        `Kilde: ${sourceLabelMap[loaded.source] || loaded.source} | Lagret: ${savedAtText} | Revisjon: ${revisionText}`;
+
+      const saved = loaded.payload;
       const { schedule, teams } = saved;
 
       let html = "<table><thead><tr>" +
