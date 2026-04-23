@@ -18,6 +18,10 @@
     <div id="scheduleContainer"></div>
   </div>
 
+  <div class="results">
+    <div id="breakSummaryContainer"></div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     initDarkMode();
@@ -70,6 +74,53 @@
 
       html += "</tbody></table>";
       document.getElementById("scheduleContainer").innerHTML = html;
+
+      // --- Første og siste kamp + lengste pause per lag ---
+      const teamMatches = new Map();
+      teams.forEach(team => teamMatches.set(team, []));
+
+      schedule.forEach(slot => {
+        slot.matches.forEach(match => {
+          teamMatches.get(match.teamA)?.push({ start: slot.start, end: slot.end });
+          teamMatches.get(match.teamB)?.push({ start: slot.start, end: slot.end });
+        });
+      });
+
+      let breakHtml = "<h3>Første og siste kamp + lengste pause per lag</h3>";
+      breakHtml += "<table><thead><tr>" +
+        "<th>Lag</th><th>Første kamp</th><th>Siste kamp</th><th>Lengste pause</th><th>Fra</th><th>Til</th>" +
+        "</tr></thead><tbody>";
+
+      teams.forEach(team => {
+        const matches = teamMatches.get(team) || [];
+        let longestBreak = null;
+
+        for (let i = 1; i < matches.length; i++) {
+          const prev = matches[i - 1];
+          const current = matches[i];
+          const breakMinutes = current.start - prev.end;
+          if (!longestBreak || breakMinutes > longestBreak.minutes) {
+            longestBreak = { minutes: breakMinutes, from: prev.end, to: current.start };
+          }
+        }
+
+        const firstMatch = matches.length > 0 ? minutesToTimeStr(matches[0].start) : "-";
+        const lastMatch  = matches.length > 0 ? minutesToTimeStr(matches[matches.length - 1].start) : "-";
+
+        breakHtml += `
+          <tr>
+            <td>${team}</td>
+            <td>${firstMatch}</td>
+            <td>${lastMatch}</td>
+            <td>${longestBreak ? `${longestBreak.minutes} min` : "Ikke relevant"}</td>
+            <td>${longestBreak ? minutesToTimeStr(longestBreak.from) : "-"}</td>
+            <td>${longestBreak ? minutesToTimeStr(longestBreak.to) : "-"}</td>
+          </tr>
+        `;
+      });
+
+      breakHtml += "</tbody></table>";
+      document.getElementById("breakSummaryContainer").innerHTML = breakHtml;
     })();
   </script>
 </body>
