@@ -37,6 +37,10 @@
       Importer resultater fra fil (JSON)
     </button>
 
+    <button onclick="importResultsFromGitHub()" class="adminAction secondary">
+      Last resultater fra GitHub
+    </button>
+
     <button onclick="importScheduleFromFile()" class="adminAction secondary">
       Importer kampoppsett fra fil (JSON)
     </button>
@@ -104,6 +108,15 @@
 
     const scheduleSourceStatusEl = document.getElementById("scheduleSourceStatus");
     const resultsSourceStatusEl = document.getElementById("resultsSourceStatus");
+
+    window.handleResultsImported = (payload, source = "lokal cache") => {
+      latestResultsPayload = payload;
+      resultsSourceStatusEl.textContent =
+        `Resultat-kilde: ${sourceLabelMap[source] || source} | ` +
+        `Lagret: ${formatSavedAt(payload?.savedAt)} | ` +
+        `Revisjon: ${formatRevision(getPayloadRevision(payload))}`;
+      location.reload();
+    };
 
     (async () => {
       const scheduleLoaded = await loadSharedScheduleWithSource();

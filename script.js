@@ -1063,6 +1063,30 @@ function importScheduleFromFile() {
   });
 }
 
+async function importScheduleFromGitHub() {
+  const published = await loadPublishedSchedule();
+  if (!published || !isValidSchedulePayload(published)) {
+    alert("Fant ikke gyldig kampoppsett på GitHub.");
+    return;
+  }
+
+  saveSchedule(
+    published.schedule,
+    published.teams,
+    getScheduleSavedAt(published),
+    getPayloadRevision(published)
+  );
+
+  if (typeof window.handleScheduleImported === "function") {
+    window.handleScheduleImported(published, "github");
+    alert("Kampoppsett lastet fra GitHub!");
+    return;
+  }
+
+  alert("Kampoppsett lastet fra GitHub!");
+  location.reload();
+}
+
 // Importer resultater
 function importResultsFromFile() {
   importJSONFile(data => {
@@ -1077,4 +1101,24 @@ function importResultsFromFile() {
     alert("Resultater importert!");
     location.reload();
   });
+}
+
+async function importResultsFromGitHub() {
+  const published = await loadPublishedResults();
+  if (!published) {
+    alert("Fant ikke gyldige resultater på GitHub.");
+    return;
+  }
+
+  matchResults = published.results;
+  saveResults(published.savedAt, published.revision);
+
+  if (typeof window.handleResultsImported === "function") {
+    window.handleResultsImported(published, "github");
+    alert("Resultater lastet fra GitHub!");
+    return;
+  }
+
+  alert("Resultater lastet fra GitHub!");
+  location.reload();
 }

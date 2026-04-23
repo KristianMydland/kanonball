@@ -65,6 +65,10 @@
       Importer kampoppsett fra fil (JSON)
     </button>
 
+    <button onclick="importScheduleFromGitHub()" class="adminAction secondary">
+      Last kampoppsett fra GitHub
+    </button>
+
     <button onclick="importResultsFromFile()" class="adminAction secondary">
       Importer resultater fra fil (JSON)
     </button>
@@ -294,7 +298,10 @@
       renderLongestBreakTable(schedule, teams);
     }
 
-    window.handleScheduleImported = applyScheduleToIndex;
+    window.handleScheduleImported = (data, source = "lokal") => {
+      applyScheduleToIndex(data);
+      updateScheduleSourceStatus(data, source);
+    };
 
     openPublishModalBtn.addEventListener("click", () => {
       publishModalOverlay.classList.add("open");

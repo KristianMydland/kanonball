@@ -7,12 +7,12 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Kanonkulene",
-          "teamB": "Lag 7"
+          "teamA": "Bykle IL",
+          "teamB": "Krossen skole"
         },
         {
           "court": "B",
-          "teamA": "Lova-lynene",
+          "teamA": "Kanonkulene",
           "teamB": "Lova-torden"
         }
       ]
@@ -24,8 +24,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Bykle",
-          "teamB": "Lauvåsen"
+          "teamA": "Lova-lynene",
+          "teamB": "Lauvåsen 1"
+        },
+        {
+          "court": "B",
+          "teamA": "Randesund Power",
+          "teamB": "Lauvåsen 2"
         }
       ]
     },
@@ -36,13 +41,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "Lag 7"
+          "teamA": "Kanonkulene",
+          "teamB": "Krossen skole"
         },
         {
           "court": "B",
-          "teamA": "Kanonkulene",
-          "teamB": "Lauvåsen"
+          "teamA": "Lova-lynene",
+          "teamB": "Bykle IL"
         }
       ]
     },
@@ -53,8 +58,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Lova-lynene",
-          "teamB": "Bykle"
+          "teamA": "Lauvåsen 2",
+          "teamB": "Lauvåsen 1"
+        },
+        {
+          "court": "B",
+          "teamA": "Randesund Power",
+          "teamB": "Lova-torden"
         }
       ]
     },
@@ -65,13 +75,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "Lova-torden"
+          "teamA": "Kanonkulene",
+          "teamB": "Lova-lynene"
         },
         {
           "court": "B",
-          "teamA": "Lag 7",
-          "teamB": "Lauvåsen"
+          "teamA": "Lauvåsen 2",
+          "teamB": "Bykle IL"
         }
       ]
     },
@@ -82,8 +92,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Kanonkulene",
-          "teamB": "Lova-lynene"
+          "teamA": "Lova-torden",
+          "teamB": "Krossen skole"
+        },
+        {
+          "court": "B",
+          "teamA": "Randesund Power",
+          "teamB": "Lauvåsen 1"
         }
       ]
     },
@@ -94,13 +109,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "Lauvåsen"
+          "teamA": "Lauvåsen 1",
+          "teamB": "Bykle IL"
         },
         {
           "court": "B",
-          "teamA": "Lova-torden",
-          "teamB": "Bykle"
+          "teamA": "Lauvåsen 2",
+          "teamB": "Kanonkulene"
         }
       ]
     },
@@ -111,8 +126,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Lag 7",
+          "teamA": "Lova-torden",
           "teamB": "Lova-lynene"
+        },
+        {
+          "court": "B",
+          "teamA": "Randesund Power",
+          "teamB": "Krossen skole"
         }
       ]
     },
@@ -123,13 +143,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "Bykle"
+          "teamA": "Lova-torden",
+          "teamB": "Lauvåsen 2"
         },
         {
           "court": "B",
-          "teamA": "Lauvåsen",
-          "teamB": "Lova-lynene"
+          "teamA": "Lauvåsen 1",
+          "teamB": "Kanonkulene"
         }
       ]
     },
@@ -140,8 +160,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Lova-torden",
-          "teamB": "Kanonkulene"
+          "teamA": "Randesund Power",
+          "teamB": "Bykle IL"
+        },
+        {
+          "court": "B",
+          "teamA": "Krossen skole",
+          "teamB": "Lova-lynene"
         }
       ]
     },
@@ -152,13 +177,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "Lova-lynene"
+          "teamA": "Bykle IL",
+          "teamB": "Kanonkulene"
         },
         {
           "court": "B",
-          "teamA": "Bykle",
-          "teamB": "Kanonkulene"
+          "teamA": "Lauvåsen 1",
+          "teamB": "Lova-torden"
         }
       ]
     },
@@ -169,8 +194,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Lova-torden",
-          "teamB": "Lag 7"
+          "teamA": "Krossen skole",
+          "teamB": "Lauvåsen 2"
+        },
+        {
+          "court": "B",
+          "teamA": "Randesund Power",
+          "teamB": "Lova-lynene"
         }
       ]
     },
@@ -181,13 +211,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Randesund Power",
-          "teamB": "Kanonkulene"
+          "teamA": "Krossen skole",
+          "teamB": "Lauvåsen 1"
         },
         {
           "court": "B",
-          "teamA": "Bykle",
-          "teamB": "Lag 7"
+          "teamA": "Bykle IL",
+          "teamB": "Lova-torden"
         }
       ]
     },
@@ -198,8 +228,13 @@
       "matches": [
         {
           "court": "A",
-          "teamA": "Lauvåsen",
-          "teamB": "Lova-torden"
+          "teamA": "Lova-lynene",
+          "teamB": "Lauvåsen 2"
+        },
+        {
+          "court": "B",
+          "teamA": "Randesund Power",
+          "teamB": "Kanonkulene"
         }
       ]
     }
@@ -208,9 +243,12 @@
     "Randesund Power",
     "Kanonkulene",
     "Lova-lynene",
-    "Bykle",
-    "Lauvåsen",
+    "Bykle IL",
+    "Krossen skole",
+    "Lauvåsen 1",
     "Lova-torden",
-    "Lag 7"
-  ]
+    "Lauvåsen 2"
+  ],
+  "savedAt": "2026-04-23T20:12:04.851Z",
+  "revision": "a4b20facbc4c895d6353d58abb731c99e18b4c7e"
 }
