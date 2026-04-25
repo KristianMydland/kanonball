@@ -103,8 +103,12 @@
     "7|Bykle 2|Lauvåsen 1": {
       "scoreA": 0,
       "scoreB": 2
+    },
+    "7|Lova-lynene|Lauvåsen 2": {
+      "scoreA": 0,
+      "scoreB": 2
     }
   },
-  "savedAt": "2026-04-25T13:55:03.681Z",
-  "revision": "903b9b91807b12e063c450273ba1e643a8c8757c"
+  "savedAt": "2026-04-25T13:58:45.044Z",
+  "revision": "afc3911565cf66237ca06c63b4683fa2fca00085"
 }
