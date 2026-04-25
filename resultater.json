@@ -87,8 +87,12 @@
     "6|Bykle 1|Kanonkulene": {
       "scoreA": 2,
       "scoreB": 0
+    },
+    "6|Randesund Power|Lova-lynene": {
+      "scoreA": 2,
+      "scoreB": 0
     }
   },
-  "savedAt": "2026-04-25T13:37:04.170Z",
-  "revision": "6c0f0ba20c50b846739a32451d8198838cdf9237"
+  "savedAt": "2026-04-25T13:41:59.122Z",
+  "revision": "2968e29224631c40aefe9b3909b034c83eeab11c"
 }
