@@ -91,8 +91,12 @@
     "6|Randesund Power|Lova-lynene": {
       "scoreA": 2,
       "scoreB": 0
+    },
+    "6|Bykle 2|Lauvåsen 2": {
+      "scoreA": 0,
+      "scoreB": 2
     }
   },
-  "savedAt": "2026-04-25T13:41:59.122Z",
-  "revision": "2968e29224631c40aefe9b3909b034c83eeab11c"
+  "savedAt": "2026-04-25T13:45:09.639Z",
+  "revision": "b8f5f3e5c12128841be190b704f31327e3be03c3"
 }
