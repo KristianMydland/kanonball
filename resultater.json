@@ -47,8 +47,32 @@
     "3|Randesund Power|Lauvåsen 1": {
       "scoreA": 2,
       "scoreB": 0
+    },
+    "4|Lauvåsen 2|Kanonkulene": {
+      "scoreA": 2,
+      "scoreB": 0
+    },
+    "4|Lauvåsen 1|Bykle 1": {
+      "scoreA": 0,
+      "scoreB": 2
+    },
+    "4|Randesund Power|Bykle 2": {
+      "scoreA": 2,
+      "scoreB": 0
+    },
+    "4|Lova-torden|Lova-lynene": {
+      "scoreA": 1,
+      "scoreB": 1
+    },
+    "5|Lauvåsen 1|Kanonkulene": {
+      "scoreA": 2,
+      "scoreB": 0
+    },
+    "5|Lova-torden|Lauvåsen 2": {
+      "scoreA": 0,
+      "scoreB": 2
     }
   },
-  "savedAt": "2026-04-25T12:51:10.557Z",
-  "revision": "b90e4873dc8943813dae0a0aa7c6e40bac5316bd"
+  "savedAt": "2026-04-25T13:24:58.671Z",
+  "revision": "c93f4ed7156279fd40ef6ae5a901f9650b09192b"
 }
