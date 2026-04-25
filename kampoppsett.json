@@ -2,13 +2,13 @@
   "schedule": [
     {
       "round": 1,
-      "start": 840,
-      "end": 846,
+      "start": 1080,
+      "end": 1085,
       "matches": [
         {
           "court": "A",
-          "teamA": "Bykle IL",
-          "teamB": "Krossen skole"
+          "teamA": "Bykle 1",
+          "teamB": "Bykle 2"
         },
         {
           "court": "B",
@@ -19,8 +19,8 @@
     },
     {
       "round": 1,
-      "start": 848,
-      "end": 854,
+      "start": 1085,
+      "end": 1090,
       "matches": [
         {
           "court": "A",
@@ -36,25 +36,25 @@
     },
     {
       "round": 2,
-      "start": 857,
-      "end": 863,
+      "start": 1091,
+      "end": 1096,
       "matches": [
         {
           "court": "A",
           "teamA": "Kanonkulene",
-          "teamB": "Krossen skole"
+          "teamB": "Bykle 2"
         },
         {
           "court": "B",
           "teamA": "Lova-lynene",
-          "teamB": "Bykle IL"
+          "teamB": "Bykle 1"
         }
       ]
     },
     {
       "round": 2,
-      "start": 865,
-      "end": 871,
+      "start": 1096,
+      "end": 1101,
       "matches": [
         {
           "court": "A",
@@ -70,8 +70,8 @@
     },
     {
       "round": 3,
-      "start": 874,
-      "end": 880,
+      "start": 1102,
+      "end": 1107,
       "matches": [
         {
           "court": "A",
@@ -81,19 +81,19 @@
         {
           "court": "B",
           "teamA": "Lauvåsen 2",
-          "teamB": "Bykle IL"
+          "teamB": "Bykle 1"
         }
       ]
     },
     {
       "round": 3,
-      "start": 882,
-      "end": 888,
+      "start": 1107,
+      "end": 1112,
       "matches": [
         {
           "court": "A",
           "teamA": "Lova-torden",
-          "teamB": "Krossen skole"
+          "teamB": "Bykle 2"
         },
         {
           "court": "B",
@@ -104,13 +104,13 @@
     },
     {
       "round": 4,
-      "start": 891,
-      "end": 897,
+      "start": 1113,
+      "end": 1118,
       "matches": [
         {
           "court": "A",
           "teamA": "Lauvåsen 1",
-          "teamB": "Bykle IL"
+          "teamB": "Bykle 1"
         },
         {
           "court": "B",
@@ -121,8 +121,8 @@
     },
     {
       "round": 4,
-      "start": 899,
-      "end": 905,
+      "start": 1118,
+      "end": 1123,
       "matches": [
         {
           "court": "A",
@@ -132,14 +132,14 @@
         {
           "court": "B",
           "teamA": "Randesund Power",
-          "teamB": "Krossen skole"
+          "teamB": "Bykle 2"
         }
       ]
     },
     {
       "round": 5,
-      "start": 908,
-      "end": 914,
+      "start": 1124,
+      "end": 1129,
       "matches": [
         {
           "court": "A",
@@ -155,29 +155,29 @@
     },
     {
       "round": 5,
-      "start": 916,
-      "end": 922,
+      "start": 1129,
+      "end": 1134,
       "matches": [
         {
           "court": "A",
           "teamA": "Randesund Power",
-          "teamB": "Bykle IL"
+          "teamB": "Bykle 1"
         },
         {
           "court": "B",
-          "teamA": "Krossen skole",
+          "teamA": "Bykle 2",
           "teamB": "Lova-lynene"
         }
       ]
     },
     {
       "round": 6,
-      "start": 925,
-      "end": 931,
+      "start": 1135,
+      "end": 1140,
       "matches": [
         {
           "court": "A",
-          "teamA": "Bykle IL",
+          "teamA": "Bykle 1",
           "teamB": "Kanonkulene"
         },
         {
@@ -189,12 +189,12 @@
     },
     {
       "round": 6,
-      "start": 933,
-      "end": 939,
+      "start": 1140,
+      "end": 1145,
       "matches": [
         {
           "court": "A",
-          "teamA": "Krossen skole",
+          "teamA": "Bykle 2",
           "teamB": "Lauvåsen 2"
         },
         {
@@ -206,25 +206,25 @@
     },
     {
       "round": 7,
-      "start": 942,
-      "end": 948,
+      "start": 1146,
+      "end": 1151,
       "matches": [
         {
           "court": "A",
-          "teamA": "Krossen skole",
+          "teamA": "Bykle 2",
           "teamB": "Lauvåsen 1"
         },
         {
           "court": "B",
-          "teamA": "Bykle IL",
+          "teamA": "Bykle 1",
           "teamB": "Lova-torden"
         }
       ]
     },
     {
       "round": 7,
-      "start": 950,
-      "end": 956,
+      "start": 1151,
+      "end": 1156,
       "matches": [
         {
           "court": "A",
@@ -243,12 +243,12 @@
     "Randesund Power",
     "Kanonkulene",
     "Lova-lynene",
-    "Bykle IL",
-    "Krossen skole",
+    "Bykle 1",
+    "Bykle 2",
     "Lauvåsen 1",
     "Lova-torden",
     "Lauvåsen 2"
   ],
-  "savedAt": "2026-04-23T20:12:04.851Z",
-  "revision": "a4b20facbc4c895d6353d58abb731c99e18b4c7e"
+  "savedAt": "2026-04-25T11:10:15.150Z",
+  "revision": "4322c7817bc3633e0e19446f4071692197414c83"
 }
