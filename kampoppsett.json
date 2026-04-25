@@ -2,8 +2,8 @@
   "schedule": [
     {
       "round": 1,
-      "start": 1080,
-      "end": 1085,
+      "start": 840,
+      "end": 845,
       "matches": [
         {
           "court": "A",
@@ -19,8 +19,8 @@
     },
     {
       "round": 1,
-      "start": 1085,
-      "end": 1090,
+      "start": 845,
+      "end": 850,
       "matches": [
         {
           "court": "A",
@@ -36,8 +36,8 @@
     },
     {
       "round": 2,
-      "start": 1091,
-      "end": 1096,
+      "start": 851,
+      "end": 856,
       "matches": [
         {
           "court": "A",
@@ -53,8 +53,8 @@
     },
     {
       "round": 2,
-      "start": 1096,
-      "end": 1101,
+      "start": 856,
+      "end": 861,
       "matches": [
         {
           "court": "A",
@@ -70,8 +70,8 @@
     },
     {
       "round": 3,
-      "start": 1102,
-      "end": 1107,
+      "start": 862,
+      "end": 867,
       "matches": [
         {
           "court": "A",
@@ -87,8 +87,8 @@
     },
     {
       "round": 3,
-      "start": 1107,
-      "end": 1112,
+      "start": 867,
+      "end": 872,
       "matches": [
         {
           "court": "A",
@@ -104,8 +104,8 @@
     },
     {
       "round": 4,
-      "start": 1113,
-      "end": 1118,
+      "start": 873,
+      "end": 878,
       "matches": [
         {
           "court": "A",
@@ -121,8 +121,8 @@
     },
     {
       "round": 4,
-      "start": 1118,
-      "end": 1123,
+      "start": 878,
+      "end": 883,
       "matches": [
         {
           "court": "A",
@@ -138,8 +138,8 @@
     },
     {
       "round": 5,
-      "start": 1124,
-      "end": 1129,
+      "start": 884,
+      "end": 889,
       "matches": [
         {
           "court": "A",
@@ -155,8 +155,8 @@
     },
     {
       "round": 5,
-      "start": 1129,
-      "end": 1134,
+      "start": 889,
+      "end": 894,
       "matches": [
         {
           "court": "A",
@@ -172,8 +172,8 @@
     },
     {
       "round": 6,
-      "start": 1135,
-      "end": 1140,
+      "start": 895,
+      "end": 900,
       "matches": [
         {
           "court": "A",
@@ -189,8 +189,8 @@
     },
     {
       "round": 6,
-      "start": 1140,
-      "end": 1145,
+      "start": 900,
+      "end": 905,
       "matches": [
         {
           "court": "A",
@@ -206,8 +206,8 @@
     },
     {
       "round": 7,
-      "start": 1146,
-      "end": 1151,
+      "start": 906,
+      "end": 911,
       "matches": [
         {
           "court": "A",
@@ -223,8 +223,8 @@
     },
     {
       "round": 7,
-      "start": 1151,
-      "end": 1156,
+      "start": 911,
+      "end": 916,
       "matches": [
         {
           "court": "A",
@@ -249,6 +249,6 @@
     "Lova-torden",
     "Lauvåsen 2"
   ],
-  "savedAt": "2026-04-25T11:10:15.150Z",
-  "revision": "4322c7817bc3633e0e19446f4071692197414c83"
+  "savedAt": "2026-04-25T11:22:18.984Z",
+  "revision": "ccbfb9ede45eaf213d9b261a3ef1233aee2cfb14"
 }
