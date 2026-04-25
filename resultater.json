@@ -79,8 +79,16 @@
     "5|Randesund Power|Bykle 1": {
       "scoreA": 2,
       "scoreB": 0
+    },
+    "6|Lauvåsen 1|Lova-torden": {
+      "scoreA": 2,
+      "scoreB": 0
+    },
+    "6|Bykle 1|Kanonkulene": {
+      "scoreA": 2,
+      "scoreB": 0
     }
   },
-  "savedAt": "2026-04-25T13:28:50.434Z",
-  "revision": "4be084e3feb09821637fcbb6c9c0e2f8bcd7b6b6"
+  "savedAt": "2026-04-25T13:37:04.170Z",
+  "revision": "6c0f0ba20c50b846739a32451d8198838cdf9237"
 }
