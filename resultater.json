@@ -23,7 +23,24 @@
     "2|Lova-lynene|Bykle 1": {
       "scoreA": 0,
       "scoreB": 2
+    },
+    "2|Randesund Power|Lova-torden": {
+      "scoreA": 2,
+      "scoreB": 0
+    },
+    "2|Lauvåsen 2|Lauvåsen 1": {
+      "scoreA": 2,
+      "scoreB": 0
+    },
+    "3|Lauvåsen 2|Bykle 1": {
+      "scoreA": 2,
+      "scoreB": 0
+    },
+    "3|Kanonkulene|Lova-lynene": {
+      "scoreA": 2,
+      "scoreB": 0
     }
   },
-  "savedAt": "2026-04-25T12:28:38.105Z"
+  "savedAt": "2026-04-25T12:42:41.953Z",
+  "revision": "c4a4a40523dd9b163b986ae531f43731abd3c5fe"
 }
