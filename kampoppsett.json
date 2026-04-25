@@ -3,7 +3,7 @@
     {
       "round": 1,
       "start": 840,
-      "end": 845,
+      "end": 846,
       "matches": [
         {
           "court": "A",
@@ -19,8 +19,8 @@
     },
     {
       "round": 1,
-      "start": 845,
-      "end": 850,
+      "start": 848,
+      "end": 854,
       "matches": [
         {
           "court": "A",
@@ -36,8 +36,8 @@
     },
     {
       "round": 2,
-      "start": 851,
-      "end": 856,
+      "start": 858,
+      "end": 864,
       "matches": [
         {
           "court": "A",
@@ -53,45 +53,45 @@
     },
     {
       "round": 2,
-      "start": 856,
-      "end": 861,
-      "matches": [
-        {
-          "court": "A",
-          "teamA": "Lauvåsen 2",
-          "teamB": "Lauvåsen 1"
-        },
-        {
-          "court": "B",
-          "teamA": "Randesund Power",
-          "teamB": "Lova-torden"
-        }
-      ]
-    },
-    {
-      "round": 3,
-      "start": 862,
-      "end": 867,
-      "matches": [
-        {
-          "court": "A",
-          "teamA": "Kanonkulene",
-          "teamB": "Lova-lynene"
-        },
-        {
-          "court": "B",
-          "teamA": "Lauvåsen 2",
-          "teamB": "Bykle 1"
-        }
-      ]
-    },
-    {
-      "round": 3,
-      "start": 867,
+      "start": 866,
       "end": 872,
       "matches": [
         {
           "court": "A",
+          "teamA": "Lauvåsen 2",
+          "teamB": "Lauvåsen 1"
+        },
+        {
+          "court": "B",
+          "teamA": "Randesund Power",
+          "teamB": "Lova-torden"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "start": 876,
+      "end": 882,
+      "matches": [
+        {
+          "court": "A",
+          "teamA": "Kanonkulene",
+          "teamB": "Lova-lynene"
+        },
+        {
+          "court": "B",
+          "teamA": "Lauvåsen 2",
+          "teamB": "Bykle 1"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "start": 884,
+      "end": 890,
+      "matches": [
+        {
+          "court": "A",
           "teamA": "Lova-torden",
           "teamB": "Bykle 2"
         },
@@ -104,8 +104,8 @@
     },
     {
       "round": 4,
-      "start": 873,
-      "end": 878,
+      "start": 894,
+      "end": 900,
       "matches": [
         {
           "court": "A",
@@ -121,8 +121,8 @@
     },
     {
       "round": 4,
-      "start": 878,
-      "end": 883,
+      "start": 902,
+      "end": 908,
       "matches": [
         {
           "court": "A",
@@ -138,8 +138,8 @@
     },
     {
       "round": 5,
-      "start": 884,
-      "end": 889,
+      "start": 912,
+      "end": 918,
       "matches": [
         {
           "court": "A",
@@ -155,8 +155,8 @@
     },
     {
       "round": 5,
-      "start": 889,
-      "end": 894,
+      "start": 920,
+      "end": 926,
       "matches": [
         {
           "court": "A",
@@ -172,8 +172,8 @@
     },
     {
       "round": 6,
-      "start": 895,
-      "end": 900,
+      "start": 930,
+      "end": 936,
       "matches": [
         {
           "court": "A",
@@ -189,8 +189,8 @@
     },
     {
       "round": 6,
-      "start": 900,
-      "end": 905,
+      "start": 938,
+      "end": 944,
       "matches": [
         {
           "court": "A",
@@ -206,8 +206,8 @@
     },
     {
       "round": 7,
-      "start": 906,
-      "end": 911,
+      "start": 948,
+      "end": 954,
       "matches": [
         {
           "court": "A",
@@ -223,8 +223,8 @@
     },
     {
       "round": 7,
-      "start": 911,
-      "end": 916,
+      "start": 956,
+      "end": 962,
       "matches": [
         {
           "court": "A",
@@ -249,6 +249,6 @@
     "Lova-torden",
     "Lauvåsen 2"
   ],
-  "savedAt": "2026-04-25T11:22:18.984Z",
-  "revision": "ccbfb9ede45eaf213d9b261a3ef1233aee2cfb14"
+  "savedAt": "2026-04-25T11:22:56.138Z",
+  "revision": "a445852660b9df30d322f9dd13905e47e120ca95"
 }
