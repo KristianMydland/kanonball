@@ -95,8 +95,16 @@
     "6|Bykle 2|Lauvåsen 2": {
       "scoreA": 0,
       "scoreB": 2
+    },
+    "7|Bykle 1|Lova-torden": {
+      "scoreA": 0,
+      "scoreB": 2
+    },
+    "7|Bykle 2|Lauvåsen 1": {
+      "scoreA": 0,
+      "scoreB": 2
     }
   },
-  "savedAt": "2026-04-25T13:45:09.639Z",
-  "revision": "b8f5f3e5c12128841be190b704f31327e3be03c3"
+  "savedAt": "2026-04-25T13:55:03.681Z",
+  "revision": "903b9b91807b12e063c450273ba1e643a8c8757c"
 }
