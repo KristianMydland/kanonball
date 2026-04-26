@@ -107,8 +107,12 @@
     "7|Lova-lynene|Lauvåsen 2": {
       "scoreA": 0,
       "scoreB": 2
+    },
+    "7|Randesund Power|Kanonkulene": {
+      "scoreA": 2,
+      "scoreB": 0
     }
   },
-  "savedAt": "2026-04-25T13:58:45.044Z",
-  "revision": "afc3911565cf66237ca06c63b4683fa2fca00085"
+  "savedAt": "2026-04-26T18:10:25.556Z",
+  "revision": "fbb27a818eec4d7aa5fb49c1420ed95a00808a77"
 }
